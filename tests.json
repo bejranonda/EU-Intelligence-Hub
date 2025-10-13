@@ -1,0 +1,81 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-10-13",
+  "test_suites": {
+    "backend": {
+      "status": "ready",
+      "tests": [
+        {
+          "name": "test_root_endpoint",
+          "file": "app/tests/test_health.py",
+          "description": "Test root endpoint returns correct information",
+          "status": "pending"
+        },
+        {
+          "name": "test_health_endpoint",
+          "file": "app/tests/test_health.py",
+          "description": "Test health check endpoint",
+          "status": "pending"
+        },
+        {
+          "name": "test_api_status_endpoint",
+          "file": "app/tests/test_health.py",
+          "description": "Test API status endpoint",
+          "status": "pending"
+        },
+        {
+          "name": "test_database_connection",
+          "file": "app/tests/test_database.py",
+          "description": "Test database connection",
+          "status": "pending"
+        },
+        {
+          "name": "test_create_keyword",
+          "file": "app/tests/test_database.py",
+          "description": "Test creating a keyword in the database",
+          "status": "pending"
+        },
+        {
+          "name": "test_create_article",
+          "file": "app/tests/test_database.py",
+          "description": "Test creating an article with sentiment fields",
+          "status": "pending"
+        },
+        {
+          "name": "test_keyword_article_relationship",
+          "file": "app/tests/test_database.py",
+          "description": "Test many-to-many relationship between keywords and articles",
+          "status": "pending"
+        },
+        {
+          "name": "test_sentiment_trend_creation",
+          "file": "app/tests/test_database.py",
+          "description": "Test creating sentiment trend record",
+          "status": "pending"
+        },
+        {
+          "name": "test_keyword_suggestion_creation",
+          "file": "app/tests/test_database.py",
+          "description": "Test creating keyword suggestion",
+          "status": "pending"
+        }
+      ]
+    },
+    "frontend": {
+      "status": "not_started",
+      "tests": [],
+      "notes": "Frontend tests will be added in Phase 4"
+    },
+    "integration": {
+      "status": "not_started",
+      "tests": [],
+      "notes": "Integration tests will be added in Phase 2-3"
+    }
+  },
+  "coverage": {
+    "backend": 0,
+    "frontend": 0,
+    "target": 80
+  },
+  "notes": "Phase 1 tests created. Will run after Docker services start successfully."
+}
