@@ -1,6 +1,6 @@
 # 🌍 European News Intelligence Hub
 
-A production-grade web application that aggregates and analyzes European media coverage about Thailand and other topics using AI-powered sentiment analysis, keyword extraction, and interactive visualizations.
+A production-grade web application that aggregates and analyzes European media coverage about Thailand (our pilot keyword) and other topics using AI-powered sentiment analysis, keyword extraction, and interactive visualizations.
 
 ## ✨ Key Features
 
