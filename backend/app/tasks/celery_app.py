@@ -28,14 +28,13 @@ celery_app.conf.update(
 celery_app.conf.beat_schedule = {
     'scrape-news-hourly': {
         'task': 'app.tasks.scraping.scrape_news',
-        'schedule': crontab(minute=0),  # Every hour
+        'schedule': crontab(minute=0),  # Every hour at :00
     },
     'aggregate-sentiment-daily': {
-        'task': 'app.tasks.sentiment.aggregate_daily_sentiment',
+        'task': 'app.tasks.sentiment_aggregation.aggregate_daily_sentiment',
         'schedule': crontab(hour=0, minute=30),  # Daily at 00:30 UTC
     },
 }
 
 # Import tasks to register them
-# Note: Will be implemented in Phase 2
-# from app.tasks import scraping, sentiment
+from app.tasks import scraping, sentiment_aggregation  # noqa: F401

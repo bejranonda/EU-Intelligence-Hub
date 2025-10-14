@@ -1,6 +1,7 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "last_updated": "2025-10-13",
+  "phase": "Phase 2: AI Integration Complete",
   "test_suites": {
     "backend": {
       "status": "ready",
@@ -61,15 +62,98 @@
         }
       ]
     },
+    "ai_services": {
+      "status": "ready",
+      "tests": [
+        {
+          "name": "test_vader_sentiment_positive",
+          "file": "app/tests/test_ai_services.py",
+          "description": "Test VADER analysis on positive text",
+          "status": "pending"
+        },
+        {
+          "name": "test_vader_sentiment_negative",
+          "file": "app/tests/test_ai_services.py",
+          "description": "Test VADER analysis on negative text",
+          "status": "pending"
+        },
+        {
+          "name": "test_vader_sentiment_neutral",
+          "file": "app/tests/test_ai_services.py",
+          "description": "Test VADER analysis on neutral text",
+          "status": "pending"
+        },
+        {
+          "name": "test_sentiment_classification",
+          "file": "app/tests/test_ai_services.py",
+          "description": "Test sentiment classification logic",
+          "status": "pending"
+        },
+        {
+          "name": "test_analyze_article_without_gemini",
+          "file": "app/tests/test_ai_services.py",
+          "description": "Test article analysis using VADER only",
+          "status": "pending"
+        },
+        {
+          "name": "test_extract_noun_chunks",
+          "file": "app/tests/test_ai_services.py",
+          "description": "Test noun chunk extraction with spaCy",
+          "status": "pending"
+        },
+        {
+          "name": "test_extract_all_without_gemini",
+          "file": "app/tests/test_ai_services.py",
+          "description": "Test full keyword extraction without Gemini",
+          "status": "pending"
+        },
+        {
+          "name": "test_generate_single_embedding",
+          "file": "app/tests/test_ai_services.py",
+          "description": "Test generating a single embedding vector",
+          "status": "pending"
+        },
+        {
+          "name": "test_generate_batch_embeddings",
+          "file": "app/tests/test_ai_services.py",
+          "description": "Test batch embedding generation",
+          "status": "pending"
+        },
+        {
+          "name": "test_compute_similarity",
+          "file": "app/tests/test_ai_services.py",
+          "description": "Test cosine similarity computation",
+          "status": "pending"
+        },
+        {
+          "name": "test_find_similar",
+          "file": "app/tests/test_ai_services.py",
+          "description": "Test finding similar embeddings",
+          "status": "pending"
+        },
+        {
+          "name": "test_gemini_client_initialization",
+          "file": "app/tests/test_ai_services.py",
+          "description": "Test Gemini client initialization",
+          "status": "pending"
+        },
+        {
+          "name": "test_rate_limiter",
+          "file": "app/tests/test_ai_services.py",
+          "description": "Test API rate limiting",
+          "status": "pending"
+        }
+      ]
+    },
     "frontend": {
       "status": "not_started",
       "tests": [],
       "notes": "Frontend tests will be added in Phase 4"
     },
     "integration": {
-      "status": "not_started",
+      "status": "pending",
       "tests": [],
-      "notes": "Integration tests will be added in Phase 2-3"
+      "notes": "Integration tests will be added in Phase 3"
     }
   },
   "coverage": {
@@ -77,5 +161,5 @@
     "frontend": 0,
     "target": 80
   },
-  "notes": "Phase 1 tests created. Will run after Docker services start successfully."
+  "notes": "Phase 2 AI services tests added. Total 22 tests (9 Phase 1 + 13 Phase 2). Ready to run after Docker installation."
 }
