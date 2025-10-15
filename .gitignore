@@ -93,3 +93,6 @@ documents/
 # Temporary files
 tmp/
 temp/
+
+# Documentation (screenshots and guides for personal use)
+docs/
