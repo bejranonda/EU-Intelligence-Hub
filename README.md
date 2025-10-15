@@ -91,18 +91,19 @@ Docker Compose orchestration, Nginx reverse proxy, PostgreSQL with pgvector, Red
 
 ## 🚀 Quick Start
 
-### One-Command Setup
+Get running in **under 30 minutes** with these 4 commands:
 
 ```bash
-# Clone repository
-git clone https://github.com/yourusername/european-news-intelligence-hub.git
-cd european-news-intelligence-hub
+# 1. Install all software (Docker, Python, Node.js, etc.)
+sudo bash install-all.sh
 
-# Add your API keys
-export GEMINI_API_KEY="your_gemini_api_key"
-export ADMIN_PASSWORD="your_secure_password"
+# 2. Log out and log back in (REQUIRED for Docker permissions!)
+exit
 
-# Start all services (PostgreSQL, Redis, Celery, Backend, Frontend)
+# 3. Update your Gemini API key
+nano .env  # Change GEMINI_API_KEY to your key from https://makersuite.google.com/app/apikey
+
+# 4. Start all services (PostgreSQL, Redis, Celery, Backend, Frontend)
 ./setup.sh
 
 # ✅ Ready! Access at:
@@ -111,17 +112,32 @@ export ADMIN_PASSWORD="your_secure_password"
 # API Docs: http://localhost:8000/docs
 ```
 
-### Running Tests
+**First time?** See [INSTALLATION.md](INSTALLATION.md) for detailed step-by-step guide.
+
+### Verify Installation
 
 ```bash
-# Backend tests (49 tests with >80% coverage)
-docker-compose exec backend pytest tests/ --cov=app
+# Run tests (49 tests with >80% coverage)
+docker compose exec backend pytest tests/ -v
 
-# Frontend tests
-cd frontend && npm test
+# Check all services are running
+docker compose ps
 
-# All services health check
-./scripts/health_check.sh
+# View logs
+docker compose logs -f
+```
+
+### Daily Usage
+
+```bash
+# Start services
+docker compose up -d
+
+# Stop services
+docker compose down
+
+# Restart a service
+docker compose restart backend
 ```
 
 ---
