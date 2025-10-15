@@ -114,6 +114,8 @@ nano .env  # Change GEMINI_API_KEY to your key from https://makersuite.google.co
 
 **First time?** See [INSTALLATION.md](INSTALLATION.md) for detailed step-by-step guide.
 
+**Getting "permission denied" error?** → [FIX_DOCKER_ERROR.md](FIX_DOCKER_ERROR.md) has the quick solution.
+
 ### Verify Installation
 
 ```bash

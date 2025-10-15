@@ -133,7 +133,7 @@ nano .env
 
 Find this line:
 ```env
-GEMINI_API_KEY=AIzaSyAvmSxCYB8LVJvYcumtzZogoU4aQEkWCAo
+GEMINI_API_KEY=
 ```
 
 Replace with your new key:
