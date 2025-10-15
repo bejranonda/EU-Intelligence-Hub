@@ -1,116 +1,115 @@
-# Security Notes
+# Security Checklist
 
-## ✅ Credentials Secured
+## Credentials Management ✅
 
-All sensitive credentials have been removed from the repository:
+### Protected Files (NOT in git)
+- ✅ `.env.production` - Production credentials
+- ✅ `.env` - Development credentials  
+- ✅ `Prompt-*.txt` - Project management files
 
-### What Was Fixed
-- ✅ **Sanitized**: `README.md` (replaced actual API key with placeholder)
-- ✅ **Protected**: `.env` file (git-ignored, never committed)
-- ✅ **Protected**: Project management files (git-ignored, never committed)
-- ✅ **Cleaned**: Git history rewritten to remove any exposed credentials
-
-### Git History
-The repository history has been **force-pushed** to ensure no sensitive data is present. All credentials now use placeholders in documentation.
-
-### Current Status
+### Verified Security
 ```bash
-✅ No API keys in git history
-✅ No sensitive data in tracked files
-✅ .env file is properly git-ignored
-✅ GitHub repository is clean
+# Check what's tracked by git
+git ls-files | grep -E "\.env|Prompt"
+# Should return NOTHING ✅
 ```
 
-## 🔐 Setting Up Credentials
+## Credentials Summary
 
-### For Local Development
+### Production Credentials (Configured)
+- ✅ Admin Password: Securely stored in `.env.production`
+- ✅ Gemini API Key: Configured and working
+- ✅ Database Password: Auto-generated strong password
+- ✅ Redis Password: Auto-generated strong password
+- ✅ Secret Key: Auto-generated 64-char string
 
-1. The `.env` file already exists locally with credentials (not committed)
-2. If you need to recreate it, copy from `.env.example`:
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Set your credentials:
-   ```bash
-   # Edit .env file
-   GEMINI_API_KEY=your_actual_api_key_here
-   ADMIN_PASSWORD=your_secure_password
-   POSTGRES_PASSWORD=your_database_password
-   SECRET_KEY=your_secret_key_min_32_chars
-   ```
-
-### For Production Deployment
-
-**IMPORTANT**: Never commit credentials to git!
-
-1. On your VPS, create `.env` file manually
-2. Set production-grade passwords
-3. Use environment-specific values:
-   ```bash
-   ENVIRONMENT=production
-   DEBUG=false
-   ```
-
-## 🛡️ Security Best Practices
-
-### What's Protected
-- ✅ `.env` file in `.gitignore`
-- ✅ API keys never hardcoded
-- ✅ Passwords loaded from environment
-- ✅ Secrets in separate config file
-
-### Additional Recommendations
-1. **Use secrets management**: For production, consider using:
-   - AWS Secrets Manager
-   - HashiCorp Vault
-   - Docker secrets
-   - Kubernetes secrets
-2. **Enable 2FA**: On GitHub and all service accounts
-3. **Regular audits**: Use `git-secrets` or `truffleHog` to scan for accidentally committed secrets
-
-## 🔄 If Credentials Are Exposed Again
-
-If you accidentally commit credentials:
-
-1. **Immediately** rotate/revoke the exposed credentials
-2. Remove from git history:
-   ```bash
-   git reset --soft HEAD~1  # Undo last commit
-   # Fix files
-   git commit -m "fix: remove credentials"
-   git push --force origin main
-   ```
-3. Update local `.env` with new credentials
-
-## 📝 Verification Commands
-
-Check that no secrets are committed:
-
+### File Permissions
 ```bash
-# Check git history for API key patterns
-git grep "AIzaSy" || echo "✅ Clean"
-
-# Check tracked files
-git ls-files | grep -E "(\.env$|secret|credential)" || echo "✅ Clean"
-
-# Verify .gitignore is working
-git status --ignored | grep .env
+-rw------- .env.production  # 600 (owner read/write only)
+-rw------- .env             # 600 (owner read/write only)
 ```
 
-## 🚨 Emergency Contacts
+## Security Best Practices
 
-If credentials are compromised:
-1. **Google Gemini API**: Regenerate key at https://makersuite.google.com/app/apikey
-2. **GitHub Token**: Revoke at https://github.com/settings/tokens
-3. **Database**: Change passwords and restart services
+### Before Deployment
+- [ ] Review `.env.production` - ensure all secrets are strong
+- [ ] Update `ALLOWED_HOSTS` with your actual domain
+- [ ] Update `CORS_ORIGINS` with your actual frontend URL
+- [ ] Change default admin password after first login
+- [ ] Enable firewall (allow only 22, 80, 443)
+- [ ] Set up SSH key authentication
+- [ ] Disable password SSH login
 
-## ✅ Current Security Status
+### After Deployment
+- [ ] Setup SSL with Let's Encrypt
+- [ ] Test backup/restore procedure
+- [ ] Setup monitoring alerts
+- [ ] Review nginx logs regularly
+- [ ] Keep Docker and system packages updated
+- [ ] Setup automated security updates
 
-- **Repository**: Clean (no sensitive data committed)
-- **Local .env**: Contains actual credentials (properly ignored)
-- **GitHub**: No exposed credentials
-- **Documentation**: All examples use placeholders
-- **Project files**: Management files are git-ignored
+### Regular Maintenance
+- [ ] Rotate passwords every 90 days
+- [ ] Review access logs monthly
+- [ ] Update dependencies regularly
+- [ ] Test disaster recovery quarterly
+- [ ] Audit user access permissions
 
-Last Security Audit: 2025-10-13
+## If Credentials Are Exposed
+
+### Immediate Actions
+1. **Change all passwords immediately**
+   ```bash
+   nano .env.production
+   # Update ADMIN_PASSWORD, POSTGRES_PASSWORD, REDIS_PASSWORD
+   ./deploy.sh production
+   ```
+
+2. **Rotate API keys**
+   - Get new Gemini API key from Google Cloud Console
+   - Update `.env.production`
+   - Redeploy
+
+3. **Check for unauthorized access**
+   ```bash
+   docker-compose -f docker-compose.prod.yml logs | grep -i "error\|failed\|unauthorized"
+   ```
+
+4. **Review git history**
+   ```bash
+   git log --all --full-history --source -- .env.production
+   # Should show NO commits ✅
+   ```
+
+## Verification Commands
+
+```bash
+# Verify .env files are not in git
+git status | grep .env
+# Should return NOTHING
+
+# Verify file permissions
+ls -la .env*
+# Should show -rw------- (600)
+
+# Check gitignore
+cat .gitignore | grep .env
+# Should show .env files listed
+
+# Verify no secrets in git history
+git log --all --oneline | xargs git show | grep -i "password\|api_key\|secret"
+# Review output carefully
+```
+
+## Contact
+
+If you discover a security vulnerability:
+1. **Do NOT** open a public GitHub issue
+2. Email security contact privately
+3. Allow 48 hours for response
+4. Coordinate disclosure timing
+
+---
+
+**Last Updated**: 2025-10-15
+**Status**: ✅ All credentials secured
