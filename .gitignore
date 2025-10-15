@@ -96,3 +96,14 @@ temp/
 
 # Documentation (screenshots and guides for personal use)
 docs/
+
+# Temporary error documentation and status files
+ERROR_SOLVED.md
+CURRENT_STATUS.md
+FILES.md
+
+# Installation scripts (keep only in git, ignore local modifications)
+*.sh.backup
+
+# Test results
+tests.json
