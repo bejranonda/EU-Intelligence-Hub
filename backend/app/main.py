@@ -113,9 +113,10 @@ async def api_status():
 
 
 # Import and include routers
-# Note: These will be implemented in Phase 2-3
-# from app.api import keywords, articles, sentiment, documents
-# app.include_router(keywords.router, prefix="/api/keywords", tags=["keywords"])
-# app.include_router(articles.router, prefix="/api/articles", tags=["articles"])
-# app.include_router(sentiment.router, prefix="/api/sentiment", tags=["sentiment"])
-# app.include_router(documents.router, prefix="/api/documents", tags=["documents"])
+from app.api import keywords, search, sentiment, documents, suggestions
+
+app.include_router(keywords.router, prefix="/api/keywords", tags=["keywords"])
+app.include_router(search.router, prefix="/api/search", tags=["search"])
+app.include_router(sentiment.router, prefix="/api/sentiment", tags=["sentiment"])
+app.include_router(documents.router, prefix="/api/documents", tags=["documents"])
+app.include_router(suggestions.router, prefix="/api/suggestions", tags=["suggestions"])
