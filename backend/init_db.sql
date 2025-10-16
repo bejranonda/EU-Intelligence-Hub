@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS keywords (
     category VARCHAR(100),
     popularity_score FLOAT DEFAULT 0,
     search_count INT DEFAULT 0,
+    last_searched TIMESTAMP,  -- Track when keyword was last searched for news
     embedding vector(384),  -- for semantic search with Sentence Transformers
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()

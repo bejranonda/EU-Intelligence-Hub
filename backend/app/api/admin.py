@@ -101,19 +101,23 @@ async def get_pending_suggestions(
 @router.post("/keywords/suggestions/{suggestion_id}/approve")
 async def approve_suggestion_manually(
     suggestion_id: int,
+    trigger_search: bool = Query(True, description="Trigger immediate news search"),
     db: Session = Depends(get_db)
 ):
     """
     Manually approve a suggestion and create keyword.
 
     Bypasses AI evaluation for admin approval.
+    Automatically translates keyword to Thai if not provided.
+    Optionally triggers immediate news search (respects 3-hour cooldown).
 
     Args:
         suggestion_id: ID of the suggestion
+        trigger_search: Whether to trigger immediate news search (default: True)
         db: Database session
 
     Returns:
-        dict: Created keyword details
+        dict: Created keyword details and search status
     """
     try:
         suggestion = db.query(KeywordSuggestion).filter(
@@ -123,13 +127,23 @@ async def approve_suggestion_manually(
         if not suggestion:
             raise HTTPException(status_code=404, detail="Suggestion not found")
 
+        # Auto-translate if Thai translation is missing
+        keyword_th = suggestion.keyword_th
+        if not keyword_th:
+            translations = await keyword_approval_service.translate_keyword(
+                suggestion.keyword_en,
+                ['th']
+            )
+            keyword_th = translations.get('th')
+            logger.info(f"Auto-translated '{suggestion.keyword_en}' to Thai: {keyword_th}")
+
         # Create new keyword
-        from app.services.embeddings import EmbeddingService
-        embedding_service = EmbeddingService()
+        from app.services.embeddings import EmbeddingGenerator
+        embedding_service = EmbeddingGenerator()
 
         new_keyword = Keyword(
             keyword_en=suggestion.keyword_en,
-            keyword_th=suggestion.keyword_th,
+            keyword_th=keyword_th,
             category=suggestion.category or "general",
             embedding=embedding_service.generate_embedding(suggestion.keyword_en)
         )
@@ -143,7 +157,7 @@ async def approve_suggestion_manually(
 
         logger.info(f"Manually approved keyword '{suggestion.keyword_en}' (ID: {new_keyword.id})")
 
-        return {
+        response = {
             "success": True,
             "keyword": {
                 "id": new_keyword.id,
@@ -153,6 +167,22 @@ async def approve_suggestion_manually(
             },
             "message": f"Keyword '{suggestion.keyword_en}' approved and created"
         }
+
+        # Trigger immediate search if requested
+        if trigger_search:
+            try:
+                from app.tasks.keyword_search import search_keyword_immediately
+                search_task = search_keyword_immediately.delay(new_keyword.id)
+                response["search_triggered"] = True
+                response["search_task_id"] = search_task.id
+                response["message"] += " and immediate search triggered"
+                logger.info(f"Triggered immediate search for keyword ID: {new_keyword.id}")
+            except Exception as e:
+                logger.error(f"Failed to trigger immediate search: {e}")
+                response["search_triggered"] = False
+                response["search_error"] = str(e)
+
+        return response
 
     except HTTPException:
         raise

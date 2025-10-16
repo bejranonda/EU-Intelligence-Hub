@@ -335,10 +335,17 @@ Respond in JSON:
         # Step 6: Approve and create keyword
         suggestion.status = "approved"
 
+        # Translate keyword if not already translated
+        keyword_th = suggestion.keyword_th
+        if not keyword_th:
+            translations = await self.translate_keyword(suggestion.keyword_en, ['th'])
+            keyword_th = translations.get('th')
+            logger.info(f"Auto-translated '{suggestion.keyword_en}' to Thai: {keyword_th}")
+
         # Create new keyword
         new_keyword = Keyword(
             keyword_en=suggestion.keyword_en,
-            keyword_th=suggestion.keyword_th,
+            keyword_th=keyword_th,
             category=suggestion.category or "general",
             embedding=self.embedding_service.generate_embedding(suggestion.keyword_en)
         )
@@ -347,9 +354,21 @@ Respond in JSON:
 
         result["action"] = "approved"
         result["keyword_id"] = new_keyword.id
+        result["translated_to"] = {"th": keyword_th} if keyword_th else {}
         result["reasoning"].append(
             f"Approved: {evaluation['reasoning']}"
         )
+
+        # Trigger immediate news search for this keyword
+        try:
+            from app.tasks.keyword_search import search_keyword_immediately
+            search_task = search_keyword_immediately.delay(new_keyword.id)
+            result["search_task_id"] = search_task.id
+            result["reasoning"].append("Immediate news search triggered")
+            logger.info(f"Triggered immediate search for keyword ID: {new_keyword.id}")
+        except Exception as e:
+            logger.error(f"Failed to trigger immediate search: {e}")
+            result["reasoning"].append("Warning: Immediate search could not be triggered")
 
         logger.info(f"Keyword '{suggestion.keyword_en}' approved and created (ID: {new_keyword.id})")
 
@@ -374,6 +393,80 @@ Respond in JSON:
             "merged_keyword": None,
             "reasoning": "Unable to analyze merge automatically"
         }
+
+    async def translate_keyword(
+        self,
+        keyword_en: str,
+        target_languages: List[str] = None
+    ) -> Dict[str, str]:
+        """
+        Translate keyword to other defined languages using AI.
+
+        Args:
+            keyword_en: English keyword to translate
+            target_languages: List of target language codes (default: ['th'])
+
+        Returns:
+            dict: {language_code: translated_keyword}
+        """
+        if target_languages is None:
+            target_languages = ['th']  # Default to Thai
+
+        language_names = {
+            'th': 'Thai',
+            'de': 'German',
+            'fr': 'French',
+            'es': 'Spanish'
+        }
+
+        # Build prompt for translations
+        languages_str = ', '.join([language_names.get(code, code) for code in target_languages])
+
+        prompt = f"""Translate this keyword for a news monitoring system:
+
+English Keyword: "{keyword_en}"
+
+Provide translations to: {languages_str}
+
+Requirements:
+1. Translate accurately for news/media context
+2. Use the most common/official term
+3. For proper nouns (countries, organizations, names), use the standard translation
+4. Keep it concise (1-3 words maximum)
+
+Respond in JSON format with language codes as keys:
+{{
+{', '.join([f'  "{code}": "translated keyword"' for code in target_languages])}
+}}
+
+Example:
+{{
+  "th": "ไทยแลนด์",
+  "de": "Thailand"
+}}"""
+
+        try:
+            response = await self.gemini_client.generate_json(prompt)
+
+            if not isinstance(response, dict):
+                logger.warning(f"Invalid translation response for keyword: {keyword_en}")
+                return {}
+
+            # Validate translations exist
+            translations = {}
+            for lang_code in target_languages:
+                if lang_code in response and response[lang_code]:
+                    translations[lang_code] = response[lang_code]
+                else:
+                    logger.warning(f"Missing translation for language: {lang_code}")
+
+            logger.info(f"Translated '{keyword_en}' to {len(translations)} languages")
+
+            return translations
+
+        except Exception as e:
+            logger.error(f"Error translating keyword '{keyword_en}': {e}")
+            return {}
 
 
 # Global instance

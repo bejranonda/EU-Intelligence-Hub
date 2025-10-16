@@ -20,6 +20,7 @@ class Keyword(Base):
     category = Column(String(100))
     popularity_score = Column(Float, default=0.0)
     search_count = Column(Integer, default=0)
+    last_searched = Column(DateTime, nullable=True)  # Track when keyword was last searched for news
     embedding = Column(Vector(384))
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())

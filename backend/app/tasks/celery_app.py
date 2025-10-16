@@ -45,4 +45,4 @@ celery_app.conf.beat_schedule = {
 }
 
 # Import tasks to register them
-from app.tasks import scraping, sentiment_aggregation, keyword_management  # noqa: F401
+from app.tasks import scraping, sentiment_aggregation, keyword_management, keyword_search  # noqa: F401
