@@ -1,7 +1,7 @@
 # European News Intelligence Hub - Development Progress
 # European News Intelligence Hub - Development Progress
 
-## Current Session: Session 5 - Phase 5: Production Deployment
+## Current Session: Session 5 - Phase 5: Production Deployment & AI Keyword Management
 **Started**: 2025-10-15
 **Status**: ✅ COMPLETED
 
@@ -17,6 +17,9 @@
 - ✅ Health check and monitoring scripts
 - ✅ Database backup and restore scripts
 - ✅ Comprehensive deployment documentation
+- ✅ **NEW**: AI-powered keyword approval system
+- ✅ **NEW**: Expanded news sources (6 → 12 outlets)
+- ✅ **NEW**: Admin API for keyword management
 
 ### Infrastructure Files Created
 
@@ -130,6 +133,67 @@
 - `scripts/backup.sh` (90 lines)
 - `scripts/restore.sh` (80 lines)
 - `DEPLOYMENT.md` (400+ lines)
+
+**Phase 5.5 AI Keyword Management (4 new files, ~1,275 lines)**:
+- `backend/app/services/keyword_approval.py` (400+ lines) - AI evaluation service
+- `backend/app/tasks/keyword_management.py` (200+ lines) - Celery automation tasks
+- `backend/app/api/admin.py` (250+ lines) - Admin API endpoints
+- `KEYWORD_WORKFLOW.md` (400+ lines) - Complete workflow documentation
+
+### AI-Powered Keyword Management Features
+
+**Automated Evaluation System**:
+- **Significance Assessment**: Gemini AI evaluates keyword relevance for European news
+- **Searchability Analysis**: Classifies as easy/moderate/difficult to find articles
+- **News Potential Scoring**: Rates high/medium/low based on coverage frequency
+- **Alternative Suggestions**: AI recommends better keywords for difficult searches
+- **Confidence Scoring**: 0.0-1.0 confidence with threshold of 0.6 for auto-approval
+
+**Duplicate Detection & Merging**:
+- **Vector Similarity Search**: Uses embeddings to find similar keywords (85% threshold)
+- **Automatic Merging**: Combines duplicates like "Singapore", "Republic of Singapore", "SG"
+- **Smart Grouping**: AI determines when keywords should be merged vs kept separate
+
+**Automated Processing**:
+- **Daily Processing**: Runs at 2:00 AM UTC to process pending suggestions
+- **Weekly Performance Review**: Monitors keyword effectiveness every Monday at 3:00 AM UTC
+- **Hourly News Scraping**: All approved keywords trigger searches every hour
+- **Status Tracking**: pending → approved/rejected/merged/pending_alternatives
+
+**Decision Flow**:
+```
+Keyword Suggested → AI Evaluates Significance → Check Duplicates →
+├─ If significant + no duplicates + easy → AUTO-APPROVE
+├─ If significant + duplicates → MERGE
+├─ If significant + difficult → PENDING with alternatives
+└─ If not significant → REJECT
+```
+
+**Admin Control**:
+- **Manual Override**: Approve/reject any suggestion via API
+- **Trigger Processing**: Process individual suggestions on-demand
+- **View Statistics**: Track pending/approved/rejected/merged counts
+- **Performance Reports**: See which keywords aren't finding articles
+
+**Expanded News Sources (12 Total)**:
+- **Original 6**: BBC, Reuters, Deutsche Welle, France24, The Guardian, EuroNews
+- **Business/Finance**: CNBC Europe, Financial Times
+- **EU Politics**: Politico Europe, Euractiv
+- **Local News**: The Local
+- **Global Perspective**: Al Jazeera English
+
+**API Endpoints** (Admin Router):
+- `POST /api/admin/keywords/suggestions/{id}/process` - Trigger AI processing
+- `GET /api/admin/keywords/suggestions/pending` - List pending suggestions
+- `POST /api/admin/keywords/suggestions/{id}/approve` - Manual approval (bypass AI)
+- `POST /api/admin/keywords/suggestions/{id}/reject` - Manual rejection
+- `GET /api/admin/keywords/suggestions/stats` - Statistics dashboard
+
+**Example Workflows**:
+1. **Easy Keyword**: "Vietnam" → Evaluated (confidence: 0.95) → Auto-approved → Hourly searches begin
+2. **Difficult Keyword**: "Southeast Asian diplomatic relations" → Evaluated (too broad) → Pending with alternatives: ["ASEAN diplomacy", "ASEAN-EU relations"]
+3. **Duplicate**: "Republic of Singapore" → Found similar: "Singapore" (92% match) → Auto-merged
+4. **Not Significant**: "Random niche blog" → Evaluated (confidence: 0.3) → Rejected
 
 ## Current Session: Session 4 - Phase 4: Frontend UI & Visualization
 **Started**: 2025-10-15
@@ -622,21 +686,26 @@ Count positive/negative/neutral → Track by source → Store trends
 - **Coverage**: Keywords, Search, Sentiment, Documents, Suggestions
 
 **Cumulative Totals**:
-- **Total files**: 54+
-- **Total lines**: ~5,710+
+- **Total files**: 58+
+- **Total lines**: ~6,985+
 - **Total tests**: 49 tests ready
-- **API endpoints**: 15+ REST endpoints
+- **API endpoints**: 20+ REST endpoints (added 5 admin endpoints)
 - **Database tables**: 8 tables with sentiment tracking
 - **Docker services**: 6 services configured
+- **News sources**: 12 European outlets
+- **Celery tasks**: 4 scheduled tasks (hourly scraping, daily aggregation, daily keyword processing, weekly performance review)
 
 ## Important Notes
 
 1. **Sentiment analysis is production-ready** - VADER provides fast baseline, Gemini adds nuanced analysis
-2. **Scraping uses Gemini** - Direct scraping difficult due to bot protection, Gemini researches recent news
+2. **Scraping uses Gemini** - Direct scraping difficult due to bot protection, Gemini researches recent news from 12 European outlets
 3. **Embeddings enable semantic search** - 384-dimensional vectors for finding similar content
-4. **Celery handles automation** - Hourly scraping and daily aggregation run automatically
+4. **Celery handles automation** - Hourly scraping, daily aggregation, daily keyword processing, weekly performance reviews
 5. **Tests don't require API calls** - Most tests use local models, Gemini tests are skipped
 6. **Fallback mechanisms** - System degrades gracefully when external APIs fail
+7. **AI-powered keyword management** - Automated approval with significance evaluation, duplicate merging, and alternative suggestions
+8. **Admin override available** - Manual approval/rejection bypasses AI for special cases
+9. **Performance monitoring** - Weekly reviews identify inactive keywords for optimization
 
 ## Next Steps - Phase 4: Frontend UI & Visualization
 
