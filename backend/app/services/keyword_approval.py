@@ -11,8 +11,8 @@ from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from app.services.gemini_client import gemini_client
-from app.services.embeddings import EmbeddingService
+from app.services.gemini_client import get_gemini_client
+from app.services.embeddings import EmbeddingGenerator
 from app.models.models import KeywordSuggestion, Keyword
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,8 @@ class KeywordApprovalService:
     """Service for AI-powered keyword approval and management."""
 
     def __init__(self):
-        self.embedding_service = EmbeddingService()
+        self.embedding_service = EmbeddingGenerator()
+        self.gemini_client = get_gemini_client()
 
     async def evaluate_keyword_significance(
         self,
@@ -86,7 +87,7 @@ Respond in JSON format:
 }}"""
 
         try:
-            response = await gemini_client.generate_json(prompt)
+            response = await self.gemini_client.generate_json(prompt)
 
             # Validate response
             if not isinstance(response, dict):
@@ -217,7 +218,7 @@ Respond in JSON:
 }}"""
 
         try:
-            response = await gemini_client.generate_json(prompt)
+            response = await self.gemini_client.generate_json(prompt)
 
             if not isinstance(response, dict):
                 return self._default_merge_result()

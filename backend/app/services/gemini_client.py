@@ -131,6 +131,51 @@ class GeminiClient:
             max_output_tokens=2048
         )
 
+    async def generate_json(
+        self,
+        prompt: str,
+        temperature: float = 0.3
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Generate and parse JSON output using Gemini.
+
+        Args:
+            prompt: The prompt text (should request JSON output)
+            temperature: Sampling temperature
+
+        Returns:
+            Parsed JSON dict or None if error
+        """
+        import json
+
+        response = self._make_request(
+            prompt,
+            temperature=temperature,
+            max_output_tokens=2048
+        )
+
+        if not response:
+            return None
+
+        try:
+            # Try to extract JSON from markdown code blocks
+            if "```json" in response:
+                json_start = response.find("```json") + 7
+                json_end = response.find("```", json_start)
+                json_str = response[json_start:json_end].strip()
+            elif "```" in response:
+                json_start = response.find("```") + 3
+                json_end = response.find("```", json_start)
+                json_str = response[json_start:json_end].strip()
+            else:
+                json_str = response.strip()
+
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON from Gemini response: {e}")
+            logger.debug(f"Response was: {response}")
+            return None
+
 
 # Global client instance
 _gemini_client: Optional[GeminiClient] = None
