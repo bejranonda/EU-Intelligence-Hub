@@ -52,6 +52,18 @@ Track sentiment evolution over 30/60/90 days with interactive Recharts visualiza
 Hourly Celery tasks scrape → extract → analyze → embed → store without manual intervention
 >> *Runs by itself every hour—collects news, analyzes sentiment, updates database while you sleep*
 
+⚡ **Immediate Search with Smart Cooldown** ✨ NEW
+When keywords are approved, instant news search across 12 sources with 3-hour cooldown to prevent duplicates
+>> *Get articles immediately instead of waiting an hour—but smart enough not to waste API quota*
+
+🌍 **Auto-Translation for Global Reach** ✨ NEW
+Submit keywords in English only—AI automatically translates to Thai (and other languages) using context-aware translation
+>> *Type "Singapore" and get "สิงคโปร์" automatically—no manual translation needed*
+
+🤖 **AI-Powered Keyword Management** ✨ NEW
+Gemini evaluates suggestions for significance, auto-merges duplicates, and recommends alternatives for difficult keywords
+>> *AI decides which keywords are worth tracking and handles duplicates automatically—like having a smart assistant*
+
 🌐 **Production-Ready Architecture**
 Docker Compose orchestration, Nginx reverse proxy, PostgreSQL with pgvector, Redis caching, SSL support
 >> *Built with professional enterprise tools—secure, fast, and scalable like systems used by major companies*
@@ -301,6 +313,15 @@ GET    /api/search/semantic?q=tourism+recovery    # Vector similarity search
 GET    /api/search/similar/{article_id}           # Find related articles
 ```
 
+### Admin & Keyword Management ✨ NEW
+```http
+POST   /api/admin/keywords/suggestions/{id}/process      # AI-powered evaluation
+POST   /api/admin/keywords/suggestions/{id}/approve      # Manual approval + auto-translate + search
+POST   /api/admin/keywords/suggestions/{id}/reject       # Reject suggestion
+GET    /api/admin/keywords/suggestions/pending           # View pending suggestions
+GET    /api/admin/keywords/suggestions/stats             # Statistics dashboard
+```
+
 **Interactive Docs**: Start the backend and visit [http://localhost:8000/docs](http://localhost:8000/docs) for full Swagger UI.
 
 ---
@@ -376,14 +397,70 @@ nano .env.production  # Add your credentials
 
 ---
 
+## 📊 Monitoring & Error Logging
+
+### Quick Log Access
+
+```bash
+# View all logs in real-time
+docker compose logs -f
+
+# Backend API errors
+docker compose logs backend | grep ERROR
+
+# Celery worker tasks
+docker compose logs celery_worker -f
+
+# Database connection issues
+docker compose logs postgres | grep -i error
+
+# Search for specific keyword
+docker compose logs backend | grep "Singapore"
+```
+
+### Health Monitoring
+
+```bash
+# Check system health
+curl http://localhost:8000/health
+
+# Run comprehensive health check
+./scripts/health_check.sh
+
+# Monitor container status
+docker compose ps
+watch -n 5 'docker compose ps'
+```
+
+### Log Locations
+
+| Service | Command | Details |
+|---------|---------|---------|
+| Backend API | `docker compose logs backend` | FastAPI errors, API requests, Gemini calls |
+| Celery Worker | `docker compose logs celery_worker` | Task execution, scraping, sentiment analysis |
+| Celery Beat | `docker compose logs celery_beat` | Scheduled task dispatch |
+| PostgreSQL | `docker compose logs postgres` | Database errors, connections |
+| Redis | `docker compose logs redis` | Cache operations, Celery broker |
+| Frontend | `docker compose logs frontend` | React build, runtime errors |
+
+**Detailed guide**: See [ERROR_LOGGING.md](ERROR_LOGGING.md) for:
+- Log analysis commands
+- Common error scenarios
+- Troubleshooting steps
+- Production monitoring setup
+- Alert configuration
+
+---
+
 ## 🔄 Automated Background Jobs
 
 | Task | Schedule | Purpose |
 |------|----------|---------|
-| **News Scraping** | Every hour | Collect latest articles from 6 European sources |
+| **News Scraping** | Every hour | Collect latest articles from 12 European sources |
 | **Sentiment Aggregation** | Daily 00:30 UTC | Compute trend statistics for fast queries |
-| **Keyword Relationships** | Weekly Sunday | Recalculate semantic connections |
-| **Database Cleanup** | Monthly 1st | Archive old articles, optimize indexes |
+| **Keyword Processing** ✨ NEW | Daily 02:00 UTC | AI evaluates pending suggestions, auto-approves/merges |
+| **Performance Review** ✨ NEW | Monday 03:00 UTC | Identifies inactive keywords, suggests optimizations |
+| **Immediate Search** ✨ NEW | On-demand | Triggered when keywords approved (3-hour cooldown) |
 
 *Celery configuration in [backend/app/tasks/](backend/app/tasks/)*
 
@@ -513,15 +590,16 @@ This project is designed for developers to pause and resume work across sessions
 
 | Metric | Value |
 |--------|-------|
-| **Total Lines of Code** | ~5,700+ |
-| **Backend (Python)** | ~3,900 lines |
+| **Total Lines of Code** | ~7,300+ |
+| **Backend (Python)** | ~5,100 lines |
 | **Frontend (TypeScript/React)** | ~1,800 lines |
 | **Test Coverage** | >80% |
-| **API Endpoints** | 15+ |
+| **API Endpoints** | 20+ |
 | **Database Tables** | 8 |
 | **Docker Services** | 6 |
-| **Supported News Sources** | 6 European outlets |
+| **Supported News Sources** | 12 European outlets ✨ |
 | **AI Models Integrated** | 4 (Gemini, VADER, spaCy, Sentence Transformers) |
+| **Celery Scheduled Tasks** | 4 automated jobs ✨ |
 
 ---
 
@@ -545,7 +623,18 @@ Free for personal and commercial use with attribution.
 - 🐛 **Bug reports**: [GitHub Issues](https://github.com/yourusername/european-news-intelligence-hub/issues)
 - 💡 **Feature requests**: [GitHub Discussions](https://github.com/yourusername/european-news-intelligence-hub/discussions)
 - 🤝 **Collaboration inquiries**: Email me directly
-- 📖 **Documentation**: See `/docs` directory
+- 📖 **Documentation**: See documentation below
+
+### 📚 Documentation
+
+- **[README.md](README.md)** - This file, project overview and quick start
+- **[INSTALLATION.md](INSTALLATION.md)** - Detailed installation guide
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Production deployment guide
+- **[FEATURE_UPDATES.md](FEATURE_UPDATES.md)** ✨ NEW - Immediate search & auto-translation features
+- **[ERROR_LOGGING.md](ERROR_LOGGING.md)** ✨ NEW - Error logging and monitoring guide
+- **[KEYWORD_WORKFLOW.md](KEYWORD_WORKFLOW.md)** - AI-powered keyword management workflow
+- **[PROGRESS.md](PROGRESS.md)** - Development progress and technical achievements
+- **[SECURITY.md](SECURITY.md)** - Security best practices and checklist
 
 ---
 
