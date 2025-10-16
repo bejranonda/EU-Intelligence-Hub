@@ -34,7 +34,15 @@ celery_app.conf.beat_schedule = {
         'task': 'app.tasks.sentiment_aggregation.aggregate_daily_sentiment',
         'schedule': crontab(hour=0, minute=30),  # Daily at 00:30 UTC
     },
+    'process-keyword-suggestions': {
+        'task': 'app.tasks.keyword_management.process_pending_suggestions',
+        'schedule': crontab(hour=2, minute=0),  # Daily at 02:00 UTC
+    },
+    'review-keyword-performance': {
+        'task': 'app.tasks.keyword_management.review_keyword_performance',
+        'schedule': crontab(hour=3, minute=0, day_of_week=1),  # Weekly on Monday at 03:00 UTC
+    },
 }
 
 # Import tasks to register them
-from app.tasks import scraping, sentiment_aggregation  # noqa: F401
+from app.tasks import scraping, sentiment_aggregation, keyword_management  # noqa: F401

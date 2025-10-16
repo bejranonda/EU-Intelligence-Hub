@@ -2,6 +2,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 import logging
 
 from app.config import get_settings
@@ -29,7 +30,12 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://frontend:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://frontend:3000",
+        "http://192.168.178.50:3000",
+        "http://192.168.178.70:3000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -77,7 +83,7 @@ async def health_check(db: Session = Depends(get_db)):
     """
     try:
         # Test database connection
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db_status = "healthy"
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
@@ -113,10 +119,11 @@ async def api_status():
 
 
 # Import and include routers
-from app.api import keywords, search, sentiment, documents, suggestions
+from app.api import keywords, search, sentiment, documents, suggestions, admin
 
 app.include_router(keywords.router, prefix="/api/keywords", tags=["keywords"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(sentiment.router, prefix="/api/sentiment", tags=["sentiment"])
 app.include_router(documents.router, prefix="/api/documents", tags=["documents"])
 app.include_router(suggestions.router, prefix="/api/suggestions", tags=["suggestions"])
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])

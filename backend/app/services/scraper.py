@@ -111,7 +111,7 @@ class NewsScraper:
         """
         prompt = """Search recent European news sources (last 48 hours) for articles mentioning Thailand.
 
-Focus on major outlets: BBC, Reuters, Deutsche Welle (DW), France24, The Guardian, EuroNews.
+Focus on major outlets: BBC, Reuters, Deutsche Welle (DW), France24, The Guardian, EuroNews, Politico Europe, Euractiv, The Local, Al Jazeera English, CNBC Europe, Financial Times.
 
 For each article found, extract:
 1. Title (exact headline)
@@ -125,7 +125,7 @@ Return results as JSON array with this structure:
 [
   {{
     "title": "Article headline",
-    "source": "BBC|Reuters|DW|France24|The Guardian|EuroNews",
+    "source": "BBC|Reuters|DW|France24|The Guardian|EuroNews|Politico Europe|Euractiv|The Local|Al Jazeera|CNBC|Financial Times",
     "date": "YYYY-MM-DD",
     "summary": "Brief summary of the article",
     "keywords": ["keyword1", "keyword2", "keyword3"],
