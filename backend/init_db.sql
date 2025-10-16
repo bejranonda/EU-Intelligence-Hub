@@ -1,19 +1,20 @@
 -- European News Intelligence Hub Database Schema
 -- Includes pgvector for semantic search and comprehensive sentiment tracking
 
--- Enable pgvector extension
-CREATE EXTENSION IF NOT EXISTS pgvector;
+-- Enable vector extension (pgvector)
+CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Keywords table with semantic search support
 CREATE TABLE IF NOT EXISTS keywords (
     id SERIAL PRIMARY KEY,
-    name_en VARCHAR(255) UNIQUE NOT NULL,
-    name_th VARCHAR(255),
+    keyword_en VARCHAR(255) UNIQUE NOT NULL,
+    keyword_th VARCHAR(255),
     category VARCHAR(100),
     popularity_score FLOAT DEFAULT 0,
     search_count INT DEFAULT 0,
-    last_updated TIMESTAMP DEFAULT NOW(),
-    embedding vector(384)  -- for semantic search with Sentence Transformers
+    embedding vector(384),  -- for semantic search with Sentence Transformers
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Articles table with full sentiment tracking
@@ -23,11 +24,12 @@ CREATE TABLE IF NOT EXISTS articles (
     summary TEXT,
     full_text TEXT,
     source_url TEXT UNIQUE NOT NULL,
-    source_name VARCHAR(255),
-    publish_date TIMESTAMP,
+    source VARCHAR(255),
+    published_date TIMESTAMP,
     scraped_date TIMESTAMP DEFAULT NOW(),
     language VARCHAR(10),
     classification VARCHAR(20) CHECK (classification IN ('fact', 'opinion', 'mixed')),
+    sentiment_classification VARCHAR(20),
     credibility_score FLOAT DEFAULT 0.5,
     embedding vector(384),
 
@@ -61,11 +63,15 @@ CREATE TABLE IF NOT EXISTS keyword_relations (
 -- User-submitted keyword suggestions
 CREATE TABLE IF NOT EXISTS keyword_suggestions (
     id SERIAL PRIMARY KEY,
-    keyword VARCHAR(255) NOT NULL,
-    suggested_at TIMESTAMP DEFAULT NOW(),
-    suggested_by_ip VARCHAR(45),
-    vote_count INT DEFAULT 1,
-    status VARCHAR(20) DEFAULT 'pending'  -- 'pending', 'approved', 'rejected'
+    keyword_en VARCHAR(255) NOT NULL,
+    keyword_th VARCHAR(255),
+    category VARCHAR(100) DEFAULT 'general',
+    reason TEXT,
+    contact_email VARCHAR(100),
+    status VARCHAR(20) DEFAULT 'pending',  -- 'pending', 'approved', 'rejected'
+    votes INT DEFAULT 1,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Manually uploaded documents
@@ -107,15 +113,17 @@ CREATE TABLE IF NOT EXISTS comparative_sentiment (
 );
 
 -- Performance indexes
-CREATE INDEX IF NOT EXISTS idx_articles_publish_date ON articles(publish_date DESC);
+CREATE INDEX IF NOT EXISTS idx_articles_published_date ON articles(published_date DESC);
 CREATE INDEX IF NOT EXISTS idx_keywords_popularity ON keywords(popularity_score DESC);
 CREATE INDEX IF NOT EXISTS idx_articles_sentiment ON articles(sentiment_overall);
 CREATE INDEX IF NOT EXISTS idx_sentiment_trends_date ON sentiment_trends(date DESC);
 CREATE INDEX IF NOT EXISTS idx_sentiment_trends_keyword ON sentiment_trends(keyword_id, date DESC);
-CREATE INDEX IF NOT EXISTS idx_articles_source ON articles(source_name);
+CREATE INDEX IF NOT EXISTS idx_articles_source ON articles(source);
 CREATE INDEX IF NOT EXISTS idx_articles_classification ON articles(classification);
 CREATE INDEX IF NOT EXISTS idx_keyword_articles_keyword ON keyword_articles(keyword_id);
 CREATE INDEX IF NOT EXISTS idx_keyword_articles_article ON keyword_articles(article_id);
+CREATE INDEX IF NOT EXISTS idx_keyword_suggestions_keyword_en ON keyword_suggestions(keyword_en);
+CREATE INDEX IF NOT EXISTS idx_keyword_suggestions_status ON keyword_suggestions(status);
 
 -- Vector similarity indexes (IVFFlat for faster similarity search)
 -- Note: These will be created after data is inserted
@@ -123,31 +131,37 @@ CREATE INDEX IF NOT EXISTS idx_keyword_articles_article ON keyword_articles(arti
 -- CREATE INDEX idx_keywords_embedding ON keywords USING ivfflat (embedding vector_cosine_ops) WITH (lists = 50);
 
 -- Insert sample data for Thailand keyword
-INSERT INTO keywords (name_en, name_th, category, popularity_score)
+INSERT INTO keywords (keyword_en, keyword_th, category, popularity_score)
 VALUES ('Thailand', 'ประเทศไทย', 'Country', 100.0)
-ON CONFLICT (name_en) DO NOTHING;
+ON CONFLICT (keyword_en) DO NOTHING;
 
--- Create function to update last_updated timestamp
-CREATE OR REPLACE FUNCTION update_last_updated()
+-- Create function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.last_updated = NOW();
+    NEW.updated_at = NOW();
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger to auto-update last_updated on keywords
+-- Trigger to auto-update updated_at on keywords
 CREATE TRIGGER keywords_update_timestamp
     BEFORE UPDATE ON keywords
     FOR EACH ROW
-    EXECUTE FUNCTION update_last_updated();
+    EXECUTE FUNCTION update_updated_at();
+
+-- Trigger to auto-update updated_at on keyword_suggestions
+CREATE TRIGGER keyword_suggestions_update_timestamp
+    BEFORE UPDATE ON keyword_suggestions
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at();
 
 -- View for sentiment summary by keyword
 CREATE OR REPLACE VIEW keyword_sentiment_summary AS
 SELECT
     k.id,
-    k.name_en,
-    k.name_th,
+    k.keyword_en,
+    k.keyword_th,
     COUNT(DISTINCT a.id) as article_count,
     AVG(a.sentiment_overall) as avg_sentiment,
     AVG(a.sentiment_confidence) as avg_confidence,
@@ -158,7 +172,7 @@ FROM keywords k
 LEFT JOIN keyword_articles ka ON k.id = ka.keyword_id
 LEFT JOIN articles a ON ka.article_id = a.id
 WHERE a.sentiment_overall IS NOT NULL
-GROUP BY k.id, k.name_en, k.name_th;
+GROUP BY k.id, k.keyword_en, k.keyword_th;
 
 -- Grant permissions (adjust as needed for your setup)
 -- GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO newsadmin;

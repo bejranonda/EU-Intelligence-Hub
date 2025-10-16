@@ -2,6 +2,7 @@
  * Homepage component
  */
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../api/client';

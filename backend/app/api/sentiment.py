@@ -9,7 +9,7 @@ import logging
 from app.database import get_db
 from app.models.models import (
     Keyword, Article, SentimentTrend, ComparativeSentiment,
-    keyword_article_association
+    KeywordArticle
 )
 
 logger = logging.getLogger(__name__)
@@ -40,10 +40,10 @@ async def get_keyword_sentiment(
 
         # Get all articles for this keyword
         articles = db.query(Article).join(
-            keyword_article_association,
-            Article.id == keyword_article_association.c.article_id
+            KeywordArticle,
+            Article.id == KeywordArticle.article_id
         ).filter(
-            keyword_article_association.c.keyword_id == keyword_id,
+            KeywordArticle.keyword_id == keyword_id,
             Article.sentiment_overall.isnot(None)
         ).all()
 
@@ -242,10 +242,10 @@ async def compare_keyword_sentiment(
         for keyword in keywords:
             # Get articles
             articles = db.query(Article).join(
-                keyword_article_association,
-                Article.id == keyword_article_association.c.article_id
+                KeywordArticle,
+                Article.id == KeywordArticle.article_id
             ).filter(
-                keyword_article_association.c.keyword_id == keyword.id,
+                KeywordArticle.keyword_id == keyword.id,
                 Article.sentiment_overall.isnot(None)
             ).all()
 
@@ -322,10 +322,10 @@ async def get_article_sentiment_details(
 
         # Get associated keywords
         keywords = db.query(Keyword).join(
-            keyword_article_association,
-            Keyword.id == keyword_article_association.c.keyword_id
+            KeywordArticle,
+            Keyword.id == KeywordArticle.keyword_id
         ).filter(
-            keyword_article_association.c.article_id == article.id
+            KeywordArticle.article_id == article.id
         ).all()
 
         return {

@@ -5,8 +5,8 @@ from typing import List, Optional
 import logging
 
 from app.database import get_db
-from app.models.models import Article, Keyword, keyword_article_association
-from app.services.embeddings import EmbeddingService
+from app.models.models import Article, Keyword, KeywordArticle
+from app.services.embeddings import get_embedding_generator
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def semantic_search(
     """
     try:
         # Initialize embedding service
-        embedding_service = EmbeddingService()
+        embedding_service = get_embedding_generator()
 
         # Generate query embedding
         query_embedding = embedding_service.generate_embedding(q)
@@ -74,10 +74,10 @@ async def semantic_search(
         for article, similarity in article_similarities:
             # Get associated keywords
             keywords = db.query(Keyword).join(
-                keyword_article_association,
-                Keyword.id == keyword_article_association.c.keyword_id
+                KeywordArticle,
+                Keyword.id == KeywordArticle.keyword_id
             ).filter(
-                keyword_article_association.c.article_id == article.id
+                KeywordArticle.article_id == article.id
             ).all()
 
             results.append({
@@ -139,7 +139,7 @@ async def find_similar_articles(
             raise HTTPException(status_code=400, detail="Article has no embedding")
 
         # Initialize embedding service
-        embedding_service = EmbeddingService()
+        embedding_service = get_embedding_generator()
 
         # Get all other articles with embeddings
         articles = db.query(Article).filter(

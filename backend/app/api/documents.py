@@ -7,10 +7,10 @@ import io
 from datetime import datetime
 
 from app.database import get_db
-from app.models.models import Article, Keyword, keyword_article_association
+from app.models.models import Article, Keyword, KeywordArticle
 from app.services.sentiment import SentimentAnalyzer
 from app.services.keyword_extractor import KeywordExtractor
-from app.services.embeddings import EmbeddingService
+from app.services.embeddings import get_embedding_generator
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ async def upload_document(
         # Initialize services
         sentiment_analyzer = SentimentAnalyzer()
         keyword_extractor = KeywordExtractor()
-        embedding_service = EmbeddingService()
+        embedding_service = get_embedding_generator()
 
         # Analyze sentiment
         sentiment_result = await sentiment_analyzer.analyze_article(text)
@@ -167,12 +167,11 @@ async def upload_document(
                 db.flush()
 
             # Associate with article
-            db.execute(
-                keyword_article_association.insert().values(
-                    keyword_id=keyword.id,
-                    article_id=article.id
-                )
+            keyword_article = KeywordArticle(
+                keyword_id=keyword.id,
+                article_id=article.id
             )
+            db.add(keyword_article)
 
             extracted_keywords.append({
                 "id": keyword.id,

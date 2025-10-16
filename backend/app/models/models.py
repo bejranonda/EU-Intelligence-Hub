@@ -15,13 +15,14 @@ class Keyword(Base):
     __tablename__ = "keywords"
 
     id = Column(Integer, primary_key=True, index=True)
-    name_en = Column(String(255), unique=True, nullable=False, index=True)
-    name_th = Column(String(255))
+    keyword_en = Column(String(255), unique=True, nullable=False, index=True)
+    keyword_th = Column(String(255))
     category = Column(String(100))
     popularity_score = Column(Float, default=0.0)
     search_count = Column(Integer, default=0)
-    last_updated = Column(DateTime, default=func.now(), onupdate=func.now())
     embedding = Column(Vector(384))
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     # Relationships
     articles = relationship("KeywordArticle", back_populates="keyword", cascade="all, delete-orphan")
@@ -37,14 +38,15 @@ class Article(Base):
     summary = Column(Text)
     full_text = Column(Text)
     source_url = Column(Text, unique=True, nullable=False, index=True)
-    source_name = Column(String(255), index=True)
-    publish_date = Column(DateTime, index=True)
+    source = Column(String(255), index=True)
+    published_date = Column(DateTime, index=True)
     scraped_date = Column(DateTime, default=func.now())
     language = Column(String(10))
     classification = Column(
         String(20),
         CheckConstraint("classification IN ('fact', 'opinion', 'mixed')")
     )
+    sentiment_classification = Column(String(20))  # Added field for sentiment classification
     credibility_score = Column(Float, default=0.5)
     embedding = Column(Vector(384))
 
@@ -62,7 +64,7 @@ class Article(Base):
     # Indexes defined in __table_args__
     __table_args__ = (
         Index('idx_articles_sentiment', 'sentiment_overall'),
-        Index('idx_articles_publish_date_desc', 'publish_date', postgresql_using='btree'),
+        Index('idx_articles_published_date_desc', 'published_date', postgresql_using='btree'),
     )
 
 
@@ -95,11 +97,15 @@ class KeywordSuggestion(Base):
     __tablename__ = "keyword_suggestions"
 
     id = Column(Integer, primary_key=True, index=True)
-    keyword = Column(String(255), nullable=False)
-    suggested_at = Column(DateTime, default=func.now())
-    suggested_by_ip = Column(String(45))
-    vote_count = Column(Integer, default=1)
+    keyword_en = Column(String(255), nullable=False, index=True)
+    keyword_th = Column(String(255))
+    category = Column(String(100), default='general')
+    reason = Column(Text)
+    contact_email = Column(String(100))
     status = Column(String(20), default='pending')  # 'pending', 'approved', 'rejected'
+    votes = Column(Integer, default=1)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
 
 class Document(Base):
@@ -111,7 +117,7 @@ class Document(Base):
     upload_date = Column(DateTime, default=func.now())
     extracted_text = Column(Text)
     source_type = Column(String(50))
-    metadata = Column(JSONB)
+    doc_metadata = Column("metadata", JSONB)  # renamed to avoid SQLAlchemy reserved word
 
 
 class SentimentTrend(Base):

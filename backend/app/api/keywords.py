@@ -6,8 +6,8 @@ from typing import List, Optional
 import logging
 
 from app.database import get_db
-from app.models.models import Keyword, Article, KeywordRelation, keyword_article_association
-from app.services.embeddings import EmbeddingService
+from app.models.models import Keyword, Article, KeywordRelation, KeywordArticle
+from app.services.embeddings import get_embedding_generator
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +60,8 @@ async def search_keywords(
         results = []
         for keyword in keywords:
             # Get article count
-            article_count = db.query(func.count(keyword_article_association.c.article_id)).filter(
-                keyword_article_association.c.keyword_id == keyword.id
+            article_count = db.query(func.count(KeywordArticle.article_id)).filter(
+                KeywordArticle.keyword_id == keyword.id
             ).scalar()
 
             results.append({
@@ -112,8 +112,8 @@ async def get_keyword(
             raise HTTPException(status_code=404, detail="Keyword not found")
 
         # Get article count
-        article_count = db.query(func.count(keyword_article_association.c.article_id)).filter(
-            keyword_article_association.c.keyword_id == keyword.id
+        article_count = db.query(func.count(KeywordArticle.article_id)).filter(
+            KeywordArticle.keyword_id == keyword.id
         ).scalar()
 
         # Get related keywords count
@@ -172,10 +172,10 @@ async def get_keyword_articles(
 
         # Base query - join articles with keyword association
         query = db.query(Article).join(
-            keyword_article_association,
-            Article.id == keyword_article_association.c.article_id
+            KeywordArticle,
+            Article.id == KeywordArticle.article_id
         ).filter(
-            keyword_article_association.c.keyword_id == keyword_id
+            KeywordArticle.keyword_id == keyword_id
         )
 
         # Apply sorting
