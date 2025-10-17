@@ -27,18 +27,25 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://frontend:3000",
+# Configure CORS - Limit origins to only necessary domains
+cors_origins = [
+    "http://localhost:3000",
+    "http://frontend:3000"
+]
+
+# Allow additional origins in development
+if settings.environment == "development":
+    cors_origins.extend([
         "http://192.168.178.50:3000",
         "http://192.168.178.70:3000"
-    ],
+    ])
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],  # Explicitly allowed methods
+    allow_headers=["Content-Type", "Authorization", "Accept"],  # Explicitly allowed headers
 )
 
 # Create tables on startup

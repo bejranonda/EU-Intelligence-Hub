@@ -7,6 +7,7 @@ import logging
 from app.database import get_db
 from app.models.models import KeywordSuggestion, Keyword
 from app.services.keyword_approval import keyword_approval_service
+from app.auth import get_current_admin
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,8 @@ router = APIRouter()
 @router.post("/keywords/suggestions/{suggestion_id}/process")
 async def process_suggestion_manually(
     suggestion_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    admin: dict = Depends(get_current_admin)
 ):
     """
     Manually trigger AI processing of a keyword suggestion.
@@ -55,7 +57,8 @@ async def process_suggestion_manually(
 @router.get("/keywords/suggestions/pending")
 async def get_pending_suggestions(
     limit: int = Query(50, ge=1, le=200),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    admin: dict = Depends(get_current_admin)
 ):
     """
     Get all pending keyword suggestions ordered by votes.
@@ -102,7 +105,8 @@ async def get_pending_suggestions(
 async def approve_suggestion_manually(
     suggestion_id: int,
     trigger_search: bool = Query(True, description="Trigger immediate news search"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    admin: dict = Depends(get_current_admin)
 ):
     """
     Manually approve a suggestion and create keyword.
@@ -196,7 +200,8 @@ async def approve_suggestion_manually(
 async def reject_suggestion(
     suggestion_id: int,
     reason: Optional[str] = Query(None, description="Reason for rejection"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    admin: dict = Depends(get_current_admin)
 ):
     """
     Manually reject a keyword suggestion.
@@ -236,7 +241,10 @@ async def reject_suggestion(
 
 
 @router.get("/keywords/suggestions/stats")
-async def get_suggestion_stats(db: Session = Depends(get_db)):
+async def get_suggestion_stats(
+    db: Session = Depends(get_db),
+    admin: dict = Depends(get_current_admin)
+):
     """
     Get statistics about keyword suggestions.
 

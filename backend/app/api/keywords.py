@@ -119,8 +119,8 @@ async def get_keyword(
         # Get related keywords count
         related_count = db.query(func.count(KeywordRelation.id)).filter(
             or_(
-                KeywordRelation.keyword_id == keyword.id,
-                KeywordRelation.related_keyword_id == keyword.id
+                KeywordRelation.keyword1_id == keyword.id,
+                KeywordRelation.keyword2_id == keyword.id
             )
         ).scalar()
 
@@ -255,10 +255,10 @@ async def get_keyword_relations(
         # Get all relationships where this keyword is involved
         relations = db.query(KeywordRelation).filter(
             or_(
-                KeywordRelation.keyword_id == keyword_id,
-                KeywordRelation.related_keyword_id == keyword_id
+                KeywordRelation.keyword1_id == keyword_id,
+                KeywordRelation.keyword2_id == keyword_id
             ),
-            KeywordRelation.strength >= min_strength
+            KeywordRelation.strength_score >= min_strength
         ).all()
 
         # Build nodes and edges
@@ -276,11 +276,11 @@ async def get_keyword_relations(
         # Process relationships
         for relation in relations:
             # Determine the related keyword
-            if relation.keyword_id == keyword_id:
-                related_id = relation.related_keyword_id
+            if relation.keyword1_id == keyword_id:
+                related_id = relation.keyword2_id
                 related_keyword = db.query(Keyword).filter(Keyword.id == related_id).first()
             else:
-                related_id = relation.keyword_id
+                related_id = relation.keyword1_id
                 related_keyword = db.query(Keyword).filter(Keyword.id == related_id).first()
 
             if not related_keyword:
@@ -299,8 +299,8 @@ async def get_keyword_relations(
             edges.append({
                 "source": str(keyword_id),
                 "target": str(related_id),
-                "strength": relation.strength,
-                "relationship_type": relation.relationship_type
+                "strength": relation.strength_score,
+                "relationship_type": relation.relation_type
             })
 
         return {

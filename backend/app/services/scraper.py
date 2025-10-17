@@ -189,7 +189,7 @@ If no recent articles found, return empty array []."""
                 date_str = data.get('date', '')
                 try:
                     publish_date = datetime.strptime(date_str, '%Y-%m-%d')
-                except:
+                except (ValueError, TypeError):
                     publish_date = datetime.now()
 
                 # Create article
