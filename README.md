@@ -34,39 +34,39 @@ This isn't just a news reader. It's a **geopolitical intelligence platform** tha
 
 🧠 **Dual-Layer Sentiment Analysis**
 Fast VADER baseline + Gemini AI for nuanced opinion detection = -1.0 to +1.0 sentiment scores with confidence metrics
- >> *Like having both a quick mood check and a detailed psychologist review—the system gets both speed and accuracy*
+ > *> Like having both a quick mood check and a detailed psychologist review—the system gets both speed and accuracy*
 
 🔍 **Semantic Search Beyond Keywords**
 384-dimensional vector embeddings find conceptually similar articles, not just exact word matches
->> *Search "tourism growth" and find articles about "visitor increases"—understands meaning, not just matching words*
+> *> Search "tourism growth" and find articles about "visitor increases"—understands meaning, not just matching words*
 
 🗺️ **Interactive Relationship Mapping**
 React Flow mind maps visualize how topics connect—discover causal relationships automatically
->> *See how "economic recovery" connects to "tourism" and "political stability"—like a visual web of related ideas*
+> *> See how "economic recovery" connects to "tourism" and "political stability"—like a visual web of related ideas*
 
 📈 **Real-Time Trend Intelligence**
 Track sentiment evolution over 30/60/90 days with interactive Recharts visualizations
->> *Watch how media opinions change over time with animated graphs you can click and explore*
+> *> Watch how media opinions change over time with animated graphs you can click and explore*
 
 🤖 **Fully Automated Pipeline**
 Hourly Celery tasks scrape → extract → analyze → embed → store without manual intervention
->> *Runs by itself every hour—collects news, analyzes sentiment, updates database while you sleep*
+> *> Runs by itself every hour—collects news, analyzes sentiment, updates database while you sleep*
 
 ⚡ **Immediate Search with Smart Cooldown** ✨ NEW
 When keywords are approved, instant news search across 12 sources with 3-hour cooldown to prevent duplicates
->> *Get articles immediately instead of waiting an hour—but smart enough not to waste API quota*
+> *> Get articles immediately instead of waiting an hour—but smart enough not to waste API quota*
 
 🌍 **Auto-Translation for Global Reach** ✨ NEW
 Submit keywords in English only—AI automatically translates to Thai (and other languages) using context-aware translation
->> *Type "Singapore" and get "สิงคโปร์" automatically—no manual translation needed*
+>> *> Type "Singapore" and get "สิงคโปร์" automatically—no manual translation needed*
 
 🤖 **AI-Powered Keyword Management** ✨ NEW
 Gemini evaluates suggestions for significance, auto-merges duplicates, and recommends alternatives for difficult keywords
->> *AI decides which keywords are worth tracking and handles duplicates automatically—like having a smart assistant*
+>> *> AI decides which keywords are worth tracking and handles duplicates automatically—like having a smart assistant*
 
 🌐 **Production-Ready Architecture**
 Docker Compose orchestration, Nginx reverse proxy, PostgreSQL with pgvector, Redis caching, SSL support
->> *Built with professional enterprise tools—secure, fast, and scalable like systems used by major companies*
+>> *> Built with professional enterprise tools—secure, fast, and scalable like systems used by major companies*
 
 ---
 
