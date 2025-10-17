@@ -58,15 +58,15 @@ When keywords are approved, instant news search across 12 sources with 3-hour co
 
 🌍 **Auto-Translation for Global Reach** ✨ NEW
 Submit keywords in English only—AI automatically translates to Thai (and other languages) using context-aware translation
->> *> Type "Singapore" and get "สิงคโปร์" automatically—no manual translation needed*
+> *> Type "Singapore" and get "สิงคโปร์" automatically—no manual translation needed*
 
 🤖 **AI-Powered Keyword Management** ✨ NEW
 Gemini evaluates suggestions for significance, auto-merges duplicates, and recommends alternatives for difficult keywords
->> *> AI decides which keywords are worth tracking and handles duplicates automatically—like having a smart assistant*
+> *> AI decides which keywords are worth tracking and handles duplicates automatically—like having a smart assistant*
 
 🌐 **Production-Ready Architecture**
 Docker Compose orchestration, Nginx reverse proxy, PostgreSQL with pgvector, Redis caching, SSL support
->> *> Built with professional enterprise tools—secure, fast, and scalable like systems used by major companies*
+> *> Built with professional enterprise tools—secure, fast, and scalable like systems used by major companies*
 
 ---
 
