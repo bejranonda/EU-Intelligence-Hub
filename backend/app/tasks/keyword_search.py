@@ -1,19 +1,31 @@
-"""
-Celery task for immediate keyword news search.
+"""Celery tasks for keyword search scheduling and execution."""
 
-This task is triggered when a keyword is approved to search for news immediately
-if the keyword hasn't been searched within the last 3 hours.
-"""
 import logging
 from datetime import datetime, timedelta
+from typing import List
+
 from sqlalchemy.orm import Session
+
 from app.tasks.celery_app import celery_app
+from app.config import get_settings
 from app.database import SessionLocal
-from app.models.models import Article, Keyword, KeywordArticle
+from app.models.models import Article, Keyword, KeywordArticle, KeywordSearchQueue
 from app.services.scraper import scrape_news_sync
 from app.services.sentiment import get_sentiment_analyzer
 from app.services.keyword_extractor import get_keyword_extractor
 from app.services.embeddings import get_embedding_generator
+from app.services.keyword_scheduler import (
+    SchedulingCandidate,
+    complete_job,
+    dequeue_jobs,
+    fill_daily_queue,
+    mark_keyword_searched,
+    queue_keywords,
+    reset_stale_jobs,
+)
+
+
+settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
@@ -49,17 +61,17 @@ def search_keyword_immediately(keyword_id: int):
                 'error': 'Keyword not found'
             }
 
-        # Check if keyword was searched in last 3 hours
-        now = datetime.now()
-        three_hours_ago = now - timedelta(hours=3)
+        cooldown = settings.keyword_search_cooldown_minutes
+        now = datetime.utcnow()
+        window_start = now - timedelta(minutes=cooldown)
 
-        if keyword.last_searched and keyword.last_searched > three_hours_ago:
+        if keyword.last_searched and keyword.last_searched > window_start:
             time_since_search = now - keyword.last_searched
             minutes_since = int(time_since_search.total_seconds() / 60)
 
             logger.info(
                 f"Keyword '{keyword.keyword_en}' was searched {minutes_since} minutes ago. "
-                f"Skipping immediate search (cooldown: 3 hours)"
+                f"Skipping immediate search (cooldown: {cooldown} minutes)"
             )
 
             return {
@@ -68,7 +80,7 @@ def search_keyword_immediately(keyword_id: int):
                 'reason': 'searched_recently',
                 'last_searched': keyword.last_searched.isoformat(),
                 'minutes_since': minutes_since,
-                'cooldown_remaining_minutes': 180 - minutes_since
+                'cooldown_remaining_minutes': max(cooldown - minutes_since, 0)
             }
 
         # Initialize services
@@ -86,8 +98,7 @@ def search_keyword_immediately(keyword_id: int):
         logger.info(f"Found {len(articles)} articles for '{keyword.keyword_en}'")
 
         # Update last_searched timestamp
-        keyword.last_searched = now
-        keyword.search_count += 1
+        mark_keyword_searched(db, keyword)
         db.commit()
 
         if not articles:
@@ -214,5 +225,87 @@ def search_keyword_immediately(keyword_id: int):
             'error': str(e)
         }
 
+    finally:
+        db.close()
+
+
+@celery_app.task(name="app.tasks.keyword_search.populate_keyword_queue")
+def populate_keyword_queue():
+    """Populate the keyword search queue respecting daily capacity."""
+
+    if not settings.keyword_scheduler_enabled:
+        logger.info("Keyword scheduler disabled; skipping queue population")
+        return {"status": "disabled"}
+
+    db = SessionLocal()
+    try:
+        result = fill_daily_queue(db)
+        return {"status": "ok", **result}
+    except Exception as exc:  # pragma: no cover
+        logger.exception("Failed to populate keyword queue: %s", exc)
+        return {"status": "error", "error": str(exc)}
+    finally:
+        db.close()
+
+
+@celery_app.task(name="app.tasks.keyword_search.process_keyword_queue")
+def process_keyword_queue(batch_size: int = None):
+    """Process pending keyword search jobs with throttling."""
+
+    if not settings.keyword_scheduler_enabled:
+        logger.info("Keyword scheduler disabled; skipping queue processing")
+        return {"status": "disabled"}
+
+    db = SessionLocal()
+    processed: List[dict] = []
+
+    try:
+        batch = batch_size or settings.keyword_scheduler_batch_size
+        jobs = dequeue_jobs(db, limit=batch)
+
+        if not jobs:
+            reset_count = reset_stale_jobs(db)
+            return {"status": "empty", "reset_jobs": reset_count}
+
+        for job in jobs:
+            keyword = db.query(Keyword).filter(Keyword.id == job.keyword_id).first()
+            if not keyword:
+                complete_job(db, job, success=False, error="keyword_missing")
+                processed.append({"job_id": job.id, "status": "missing_keyword"})
+                continue
+
+            result = search_keyword_immediately(keyword.id)
+            success = result.get('status') == 'success'
+            complete_job(db, job, success=success, error=None if success else result.get('error'))
+            processed.append({"job_id": job.id, "keyword": keyword.keyword_en, "result": result})
+
+        return {"status": "processed", "jobs": processed}
+    except Exception as exc:  # pragma: no cover
+        logger.exception("Failed to process keyword queue: %s", exc)
+        return {"status": "error", "error": str(exc)}
+    finally:
+        db.close()
+
+
+@celery_app.task(name="app.tasks.keyword_search.enqueue_keywords")
+def enqueue_keywords(keyword_ids: List[int]):
+    """Enqueue provided keywords respecting throttling rules."""
+
+    db = SessionLocal()
+    try:
+        keywords = db.query(Keyword).filter(Keyword.id.in_(keyword_ids)).all()
+        candidates = [
+            SchedulingCandidate(
+                keyword=kw,
+                next_scheduled_at=datetime.utcnow(),
+                priority=kw.search_priority or 0,
+            )
+            for kw in keywords
+        ]
+        queued = queue_keywords(db, candidates)
+        return {"status": "ok", "queued": queued}
+    except Exception as exc:  # pragma: no cover
+        logger.exception("Failed to enqueue keywords: %s", exc)
+        return {"status": "error", "error": str(exc)}
     finally:
         db.close()

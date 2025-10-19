@@ -10,7 +10,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from app.tasks.celery_app import celery_app
 from app.database import SessionLocal
-from app.models.models import Article, Keyword, KeywordArticle
+from app.models.models import Article, Keyword, KeywordArticle, SourceIngestionHistory, NewsSource
 from app.services.scraper import scrape_news_sync
 from app.services.sentiment import get_sentiment_analyzer
 from app.services.keyword_extractor import get_keyword_extractor
@@ -47,6 +47,7 @@ def scrape_news():
 
         processed_count = 0
         skipped_count = 0
+        ingestion_records = {}
 
         for article_data in articles:
             try:
@@ -142,6 +143,27 @@ def scrape_news():
                 db.commit()
                 processed_count += 1
                 logger.info(f"Processed: {article_data.title[:50]}...")
+
+                if article_data.source_name:
+                    ingestion_records.setdefault(article_data.source_name, 0)
+                    ingestion_records[article_data.source_name] += 1
+
+        try:
+            for source_name, count in ingestion_records.items():
+                source_record = db.query(NewsSource).filter_by(name=source_name).first()
+                if not source_record:
+                    continue
+                db.add(
+                    SourceIngestionHistory(
+                        source_id=source_record.id,
+                        last_run_at=datetime.now(),
+                        articles_ingested=count,
+                        success=True,
+                    )
+                )
+            db.commit()
+        except Exception as history_exc:
+            logger.warning(f"Failed to record ingestion history: {history_exc}")
 
             except Exception as e:
                 logger.error(f"Failed to process article: {str(e)}")

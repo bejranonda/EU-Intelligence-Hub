@@ -12,12 +12,14 @@ Uses Gemini API to search for Thailand-related articles.
 import logging
 import asyncio
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Iterable
 import aiohttp
 from bs4 import BeautifulSoup
 import re
 from app.services.gemini_client import get_gemini_client, retry_on_failure
 from app.config import get_settings
+from app.database import SessionLocal
+from app.models.models import NewsSource
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -65,24 +67,8 @@ class NewsScraper:
         self.session: Optional[aiohttp.ClientSession] = None
 
         # Source configurations
-        self.sources = {
-            'BBC': {
-                'search_url': 'https://www.bbc.com/search',
-                'base_url': 'https://www.bbc.com'
-            },
-            'Reuters': {
-                'search_url': 'https://www.reuters.com/search/news',
-                'base_url': 'https://www.reuters.com'
-            },
-            'Deutsche Welle': {
-                'search_url': 'https://www.dw.com/search',
-                'base_url': 'https://www.dw.com'
-            },
-            'France 24': {
-                'search_url': 'https://www.france24.com/en/search',
-                'base_url': 'https://www.france24.com'
-            }
-        }
+        self.sources = {}
+        self._refresh_sources()
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -98,7 +84,38 @@ class NewsScraper:
         if self.session:
             await self.session.close()
 
-    @retry_on_failure(max_retries=2, delay=2.0)
+    def _refresh_sources(self) -> None:
+        session = SessionLocal()
+        sources: Dict[str, Dict[str, str]] = {}
+        try:
+            db_sources: Iterable[NewsSource] = (
+                session.query(NewsSource)
+                .filter(NewsSource.enabled.is_(True))
+                .order_by(NewsSource.priority.desc(), NewsSource.created_at.asc())
+                .all()
+            )
+            for source in db_sources:
+                sources[source.name] = {
+                    'base_url': source.base_url,
+                    'language': source.language,
+                    'parser': source.parser or 'generic'
+                }
+        except Exception as exc:
+            logger.error(f"Failed to load sources from database: {exc}")
+        finally:
+            session.close()
+
+        if not sources:
+            logger.warning("No sources found in database; using default seed set")
+            sources = {
+                'BBC': {'base_url': 'https://www.bbc.com', 'language': 'en', 'parser': 'generic'},
+                'Reuters': {'base_url': 'https://www.reuters.com', 'language': 'en', 'parser': 'generic'},
+                'Deutsche Welle': {'base_url': 'https://www.dw.com', 'language': 'en', 'parser': 'generic'},
+                'France 24': {'base_url': 'https://www.france24.com', 'language': 'en', 'parser': 'generic'},
+            }
+
+        self.sources = sources
+
     def research_thailand_news_gemini(self) -> List[Dict]:
         """
         Use Gemini to research recent Thailand-related news from European sources.
@@ -230,6 +247,9 @@ If no recent articles found, return empty array []."""
         max_articles = max_articles_per_source or settings.max_articles_per_source
 
         logger.info("Starting news scraping with Gemini research...")
+        if settings.enable_source_expansion:
+            self._refresh_sources()
+            logger.info(f"Using {len(self.sources)} configured sources: {list(self.sources.keys())}")
 
         # Use Gemini to find recent articles
         gemini_results = self.research_thailand_news_gemini()

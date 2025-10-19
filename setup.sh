@@ -72,7 +72,7 @@ echo ""
 
 # Wait for PostgreSQL to be ready
 echo "Waiting for PostgreSQL..."
-timeout=60
+timeout=120
 counter=0
 until $DOCKER_COMPOSE_CMD exec -T postgres pg_isready -U euint_user &> /dev/null; do
     if [ $counter -ge $timeout ]; then

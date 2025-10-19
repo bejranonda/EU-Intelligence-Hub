@@ -42,7 +42,28 @@ celery_app.conf.beat_schedule = {
         'task': 'app.tasks.keyword_management.review_keyword_performance',
         'schedule': crontab(hour=3, minute=0, day_of_week=1),  # Weekly on Monday at 03:00 UTC
     },
+    'daily-database-backup': {
+        'task': 'app.tasks.backup_tasks.daily_database_backup',
+        'schedule': crontab(hour=1, minute=0),  # Daily at 01:00 UTC
+    },
+    'cleanup-old-backups': {
+        'task': 'app.tasks.backup_tasks.cleanup_old_backups',
+        'schedule': crontab(hour=4, minute=0),  # Daily at 04:00 UTC
+        'kwargs': {'retention_days': 7},
+    },
+    'database-health-check': {
+        'task': 'app.tasks.backup_tasks.database_health_check',
+        'schedule': crontab(minute=0),  # Every hour
+    },
+    'populate-keyword-queue': {
+        'task': 'app.tasks.keyword_search.populate_keyword_queue',
+        'schedule': crontab(minute='*/30'),  # Every 30 minutes
+    },
+    'process-keyword-queue': {
+        'task': 'app.tasks.keyword_search.process_keyword_queue',
+        'schedule': crontab(minute='*/15'),  # Every 15 minutes
+    },
 }
 
 # Import tasks to register them
-from app.tasks import scraping, sentiment_aggregation, keyword_management, keyword_search  # noqa: F401
+from app.tasks import scraping, sentiment_aggregation, keyword_management, keyword_search, backup_tasks  # noqa: F401

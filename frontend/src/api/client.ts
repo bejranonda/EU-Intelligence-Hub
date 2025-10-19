@@ -40,7 +40,64 @@ class ApiClient {
     page?: number;
     page_size?: number;
   }) {
-    const response = await this.client.get('/api/keywords/', { params });
+    try {
+      const response = await this.client.get('/api/keywords/', { params });
+      
+      // Ensure response has required structure
+      if (!response.data.results) {
+        console.warn('API response missing results key:', response.data);
+        return {
+          results: [],
+          pagination: {
+            page: params.page || 1,
+            page_size: params.page_size || 20,
+            total: 0,
+            total_pages: 0
+          }
+        };
+      }
+      
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching keywords:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      throw error;
+    }
+  }
+
+  async getAdminSources() {
+    const response = await this.client.get('/admin/sources');
+    return response.data;
+  }
+
+  async getAdminSourceHistory(sourceId: number, limit = 20) {
+    const response = await this.client.get(`/admin/sources/${sourceId}/ingestion`, {
+      params: { limit },
+    });
+    return response.data;
+  }
+
+  async toggleAdminSource(sourceId: number, enabled: boolean) {
+    const response = await this.client.post(`/admin/sources/${sourceId}/toggle`, null, {
+      params: { enabled },
+    });
+    return response.data;
+  }
+
+  async createAdminSource(data: {
+    name: string;
+    base_url: string;
+    language?: string;
+    country?: string;
+    priority?: number;
+    parser?: string;
+    tags?: string[];
+    enabled?: boolean;
+  }) {
+    const response = await this.client.post('/admin/sources', data);
     return response.data;
   }
 
@@ -73,14 +130,6 @@ class ApiClient {
   }
 
   // Search API
-  async semanticSearch(params: {
-    q: string;
-    limit?: number;
-    min_similarity?: number;
-  }) {
-    const response = await this.client.get('/api/search/semantic', { params });
-    return response.data;
-  }
 
   async findSimilarArticles(
     articleId: number,
@@ -142,12 +191,30 @@ class ApiClient {
   async createSuggestion(data: {
     keyword_en: string;
     keyword_th?: string;
+    keyword_de?: string;
+    keyword_fr?: string;
+    keyword_es?: string;
+    keyword_it?: string;
+    keyword_pl?: string;
+    keyword_sv?: string;
+    keyword_nl?: string;
     category?: string;
     reason?: string;
     contact_email?: string;
   }) {
-    const response = await this.client.post('/api/suggestions/', data);
-    return response.data;
+    try {
+      console.log('Submitting suggestion:', data);
+      const response = await this.client.post('/api/suggestions/', data);
+      console.log('Suggestion response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error submitting suggestion:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      throw error;
+    }
   }
 
   async getSuggestions(status?: string, limit: number = 50) {
@@ -177,3 +244,27 @@ class ApiClient {
 // Export singleton instance
 export const apiClient = new ApiClient();
 export default apiClient;
+
+export async function fetchJSON<T>(url: string, options: RequestInit = {}): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${url}`, {
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+    ...options,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
+  return (await response.json()) as T;
+}
+
+export async function postJSON<T>(url: string, body: unknown): Promise<T> {
+  return fetchJSON<T>(url, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}

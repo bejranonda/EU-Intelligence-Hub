@@ -1,0 +1,268 @@
+version: '3.8'
+
+# High Availability Docker Compose configuration with PostgreSQL replication
+# Primary and Replica setup with automated failover
+
+services:
+  postgres_primary:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.postgres
+    container_name: euint_postgres_primary
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_REPLICATION_USER: ${POSTGRES_REPLICATION_USER:-replicator}
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD}
+      POSTGRES_REPLICATION_MODE: master
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_primary_data:/var/lib/postgresql/data
+      - ./docker/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./docker/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - ./backend/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    command:
+      - "postgres"
+      - "-c"
+      - "config_file=/etc/postgresql/postgresql.conf"
+      - "-c"
+      - "wal_level=replica"
+      - "-c"
+      - "max_wal_senders=3"
+      - "-c"
+      - "max_replication_slots=3"
+      - "-c"
+      - "hot_standby=on"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - euint_network
+
+  postgres_replica:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.postgres
+    container_name: euint_postgres_replica
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_REPLICATION_USER: ${POSTGRES_REPLICATION_USER:-replicator}
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD}
+      POSTGRES_REPLICATION_MODE: slave
+      POSTGRES_MASTER_SERVICE: postgres_primary
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+    depends_on:
+      postgres_primary:
+        condition: service_healthy
+    command:
+      - "bash"
+      - "-c"
+      - |
+        if [ ! -s "$PGDATA/PG_VERSION" ]; then
+          until pg_basebackup -h postgres_primary -D $PGDATA -U ${POSTGRES_REPLICATION_USER:-replicator} -v -P -W -R
+          do
+            echo "Waiting for primary to connect..."
+            sleep 1s
+          done
+        fi
+        exec postgres -c wal_level=replica -c hot_standby=on
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - euint_network
+
+  pgpool:
+    image: pgpool/pgpool:latest
+    container_name: euint_pgpool
+    environment:
+      PGPOOL_PARAMS_BACKEND_HOSTNAME0: postgres_primary
+      PGPOOL_PARAMS_BACKEND_PORT0: 5432
+      PGPOOL_PARAMS_BACKEND_WEIGHT0: 1
+      PGPOOL_PARAMS_BACKEND_HOSTNAME1: postgres_replica
+      PGPOOL_PARAMS_BACKEND_PORT1: 5432
+      PGPOOL_PARAMS_BACKEND_WEIGHT1: 0
+      PGPOOL_PARAMS_BACKEND_DATA_DIRECTORY0: /var/lib/postgresql/data
+      PGPOOL_PARAMS_BACKEND_DATA_DIRECTORY1: /var/lib/postgresql/data
+      PGPOOL_PARAMS_POOL_MODE: native_replication
+      PGPOOL_PARAMS_NUM_INIT_CHILDREN: 32
+      PGPOOL_PARAMS_MAX_POOL: 4
+      PGPOOL_PARAMS_LISTEN_ADDRESSES: '*'
+      PGPOOL_PARAMS_PORT: 5432
+      PGPOOL_ADMIN_USERNAME: pgpool
+      PGPOOL_ADMIN_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5434:5432"
+    depends_on:
+      - postgres_primary
+      - postgres_replica
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - euint_network
+
+  redis_primary:
+    image: redis:7-alpine
+    container_name: euint_redis_primary
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_primary_data:/data
+    command: redis-server --appendonly yes --appendfilename appendonly.aof
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - euint_network
+
+  redis_replica:
+    image: redis:7-alpine
+    container_name: euint_redis_replica
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_replica_data:/data
+    command: redis-server --slaveof redis_primary 6379 --appendonly yes --appendfilename appendonly.aof
+    depends_on:
+      - redis_primary
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - euint_network
+
+  redis_sentinel:
+    image: redis:7-alpine
+    container_name: euint_redis_sentinel
+    ports:
+      - "26379:26379"
+    volumes:
+      - ./monitoring/sentinel.conf:/etc/redis/sentinel.conf:ro
+      - redis_sentinel_data:/data
+    command: redis-sentinel /etc/redis/sentinel.conf --port 26379
+    depends_on:
+      - redis_primary
+      - redis_replica
+    networks:
+      - euint_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: euint_backend
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgpool:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis_primary:6379/0
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      SECRET_KEY: ${SECRET_KEY}
+      ENVIRONMENT: ${ENVIRONMENT}
+      DEBUG: ${DEBUG}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      CELERY_BROKER_URL: redis://redis_primary:6379/0
+      CELERY_RESULT_BACKEND: redis://redis_primary:6379/0
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_uploads:/app/uploads
+    depends_on:
+      pgpool:
+        condition: service_healthy
+      redis_primary:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - euint_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: euint_celery_worker
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgpool:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis_primary:6379/0
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      SECRET_KEY: ${SECRET_KEY}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      CELERY_BROKER_URL: redis://redis_primary:6379/0
+      CELERY_RESULT_BACKEND: redis://redis_primary:6379/0
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - pgpool
+      - redis_primary
+    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=4
+    networks:
+      - euint_network
+
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: euint_celery_beat
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgpool:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis_primary:6379/0
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      SECRET_KEY: ${SECRET_KEY}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      CELERY_BROKER_URL: redis://redis_primary:6379/0
+      CELERY_RESULT_BACKEND: redis://redis_primary:6379/0
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - pgpool
+      - redis_primary
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+    networks:
+      - euint_network
+
+volumes:
+  postgres_primary_data:
+  postgres_replica_data:
+  redis_primary_data:
+  redis_replica_data:
+  redis_sentinel_data:
+  backend_uploads:
+
+networks:
+  euint_network:
+    driver: bridge

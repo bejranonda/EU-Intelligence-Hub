@@ -14,6 +14,13 @@ export function SuggestPage() {
   const [formData, setFormData] = useState({
     keyword_en: '',
     keyword_th: '',
+    keyword_de: '',
+    keyword_fr: '',
+    keyword_es: '',
+    keyword_it: '',
+    keyword_pl: '',
+    keyword_sv: '',
+    keyword_nl: '',
     category: '',
     reason: '',
     contact_email: '',
@@ -41,20 +48,50 @@ export function SuggestPage() {
     setError(null);
 
     try {
-      await apiClient.createSuggestion(formData);
-      setSuccess(true);
-      setFormData({
-        keyword_en: '',
-        keyword_th: '',
-        category: '',
-        reason: '',
-        contact_email: '',
-      });
+      const result = await apiClient.createSuggestion(formData);
+      
+      // Check for successful response
+      if (result.success) {
+        setSuccess(true);
+        setFormData({
+          keyword_en: '',
+          keyword_th: '',
+          keyword_de: '',
+          keyword_fr: '',
+          keyword_es: '',
+          keyword_it: '',
+          keyword_pl: '',
+          keyword_sv: '',
+          keyword_nl: '',
+          category: '',
+          reason: '',
+          contact_email: '',
+        });
 
-      // Reset success message after 5 seconds
-      setTimeout(() => setSuccess(false), 5000);
+        // Reset success message after 5 seconds
+        setTimeout(() => setSuccess(false), 5000);
+      } else {
+        setError(result.message || 'Failed to submit suggestion. Please try again.');
+      }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to submit suggestion. Please try again.');
+      // Extract error message from various response formats
+      let errorMessage = 'Failed to submit suggestion. Please try again.';
+      
+      if (err.response?.data?.detail) {
+        errorMessage = err.response.data.detail;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      console.error('Suggestion submission error:', {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: errorMessage
+      });
+      
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -118,6 +155,93 @@ export function SuggestPage() {
                   onChange={handleChange}
                   placeholder="e.g., สิงคโปร์, เวียดนาม"
                 />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Keyword (German) <span className="text-gray-400">(Optional)</span>
+                  </label>
+                  <Input
+                    type="text"
+                    name="keyword_de"
+                    value={formData.keyword_de}
+                    onChange={handleChange}
+                    placeholder="e.g., Deutschland"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Keyword (French) <span className="text-gray-400">(Optional)</span>
+                  </label>
+                  <Input
+                    type="text"
+                    name="keyword_fr"
+                    value={formData.keyword_fr}
+                    onChange={handleChange}
+                    placeholder="e.g., Climat"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Keyword (Spanish) <span className="text-gray-400">(Optional)</span>
+                  </label>
+                  <Input
+                    type="text"
+                    name="keyword_es"
+                    value={formData.keyword_es}
+                    onChange={handleChange}
+                    placeholder="e.g., Energía"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Keyword (Italian) <span className="text-gray-400">(Optional)</span>
+                  </label>
+                  <Input
+                    type="text"
+                    name="keyword_it"
+                    value={formData.keyword_it}
+                    onChange={handleChange}
+                    placeholder="e.g., Innovazione"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Keyword (Polish) <span className="text-gray-400">(Optional)</span>
+                  </label>
+                  <Input
+                    type="text"
+                    name="keyword_pl"
+                    value={formData.keyword_pl}
+                    onChange={handleChange}
+                    placeholder="e.g., Bezpieczeństwo"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Keyword (Swedish) <span className="text-gray-400">(Optional)</span>
+                  </label>
+                  <Input
+                    type="text"
+                    name="keyword_sv"
+                    value={formData.keyword_sv}
+                    onChange={handleChange}
+                    placeholder="e.g., Energi"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Keyword (Dutch) <span className="text-gray-400">(Optional)</span>
+                  </label>
+                  <Input
+                    type="text"
+                    name="keyword_nl"
+                    value={formData.keyword_nl}
+                    onChange={handleChange}
+                    placeholder="e.g., Handel"
+                  />
+                </div>
               </div>
 
               {/* Category (Optional) */}

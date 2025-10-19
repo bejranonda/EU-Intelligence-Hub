@@ -9,8 +9,8 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)](https://docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-<!-- REPLACE: Add demo GIF showing: 1) Homepage search, 2) Sentiment timeline animation, 3) Interactive mind map -->
-![Demo Preview](docs/demo.gif)
+<!-- TODO: Replace with final GIF showing search → sentiment timeline → AI approval -->
+![Demo Preview Placeholder](docs/demo.gif)
 
 **[🚀 Live Demo](#)** • **[📖 API Docs](http://localhost:8000/docs)** • **[🎥 Video Walkthrough](#)**
 

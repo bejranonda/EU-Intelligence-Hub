@@ -1,62 +1,24 @@
 """Tests for API endpoints."""
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+
 from datetime import datetime, timedelta
 import io
 
-from app.main import app
-from app.database import get_db, Base
-from app.models.models import Keyword, Article, KeywordSuggestion, SentimentTrend, keyword_article_association
+import pytest
 
-# Test database setup
-SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///./test_api.db"
-engine = create_engine(SQLALCHEMY_TEST_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def override_get_db():
-    """Override database dependency for testing."""
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_db] = override_get_db
-client = TestClient(app)
-
-
-@pytest.fixture(autouse=True)
-def setup_database():
-    """Create tables before each test and drop after."""
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
+from app.models.models import Keyword, Article, KeywordSuggestion, SentimentTrend, KeywordArticle
 
 
 @pytest.fixture
-def sample_keyword(setup_database):
-    """Create a sample keyword for testing."""
-    db = TestingSessionLocal()
-    keyword = Keyword(
-        keyword_en="Thailand",
-        keyword_th="ประเทศไทย",
-        category="country"
-    )
-    db.add(keyword)
-    db.commit()
-    db.refresh(keyword)
-    db.close()
+def sample_keyword(db_session):
+    keyword = Keyword(keyword_en="Thailand", keyword_th="ประเทศไทย", category="country")
+    db_session.add(keyword)
+    db_session.commit()
+    db_session.refresh(keyword)
     return keyword
 
 
 @pytest.fixture
-def sample_article(setup_database, sample_keyword):
-    """Create a sample article with sentiment data."""
-    db = TestingSessionLocal()
+def sample_article(db_session, sample_keyword):
     article = Article(
         title="Thailand Tourism Booms",
         summary="Thailand sees record tourist arrivals",
@@ -71,28 +33,29 @@ def sample_article(setup_database, sample_keyword):
         emotion_positive=0.8,
         emotion_negative=0.1,
         emotion_neutral=0.1,
-        classification="FACT"
+        classification="FACT",
     )
-    db.add(article)
-    db.commit()
-    db.refresh(article)
+    db_session.add(article)
+    db_session.commit()
+    db_session.refresh(article)
 
-    # Associate with keyword
-    db.execute(
-        keyword_article_association.insert().values(
+    db_session.add(
+        KeywordArticle(
             keyword_id=sample_keyword.id,
-            article_id=article.id
+            article_id=article.id,
+            relevance_score=0.9,
         )
     )
-    db.commit()
-    db.close()
+    db_session.commit()
+
     return article
 
 
 # ==================== Keyword Endpoints Tests ====================
 
-def test_search_keywords_without_query(sample_keyword):
+def test_search_keywords_without_query(client, sample_keyword):
     """Test searching keywords without query parameter."""
+
     response = client.get("/api/keywords/")
     assert response.status_code == 200
     data = response.json()
@@ -102,7 +65,7 @@ def test_search_keywords_without_query(sample_keyword):
     assert data["results"][0]["keyword_en"] == "Thailand"
 
 
-def test_search_keywords_with_query(sample_keyword):
+def test_search_keywords_with_query(client, sample_keyword):
     """Test searching keywords with query parameter."""
     response = client.get("/api/keywords/?q=Thai")
     assert response.status_code == 200
@@ -111,19 +74,16 @@ def test_search_keywords_with_query(sample_keyword):
     assert "Thailand" in data["results"][0]["keyword_en"]
 
 
-def test_search_keywords_pagination():
+def test_search_keywords_pagination(client, db_session):
     """Test keyword search pagination."""
-    db = TestingSessionLocal()
-    # Create multiple keywords
     for i in range(25):
         keyword = Keyword(
             keyword_en=f"Keyword{i}",
             keyword_th=f"คีย์เวิร์ด{i}",
-            category="test"
+            category="test",
         )
-        db.add(keyword)
-    db.commit()
-    db.close()
+        db_session.add(keyword)
+    db_session.commit()
 
     # Test first page
     response = client.get("/api/keywords/?page=1&page_size=10")
@@ -141,7 +101,7 @@ def test_search_keywords_pagination():
     assert data["pagination"]["page"] == 2
 
 
-def test_get_keyword_detail(sample_keyword):
+def test_get_keyword_detail(client, sample_keyword):
     """Test getting keyword details."""
     response = client.get(f"/api/keywords/{sample_keyword.id}")
     assert response.status_code == 200
@@ -151,13 +111,13 @@ def test_get_keyword_detail(sample_keyword):
     assert data["category"] == "country"
 
 
-def test_get_keyword_not_found():
+def test_get_keyword_not_found(client):
     """Test getting non-existent keyword."""
     response = client.get("/api/keywords/99999")
     assert response.status_code == 404
 
 
-def test_get_keyword_articles(sample_keyword, sample_article):
+def test_get_keyword_articles(client, sample_keyword, sample_article):
     """Test getting articles for a keyword."""
     response = client.get(f"/api/keywords/{sample_keyword.id}/articles")
     assert response.status_code == 200
@@ -168,9 +128,8 @@ def test_get_keyword_articles(sample_keyword, sample_article):
     assert "sentiment" in data["results"][0]
 
 
-def test_get_keyword_articles_sorting(sample_keyword):
+def test_get_keyword_articles_sorting(client, db_session, sample_keyword):
     """Test sorting articles by different criteria."""
-    db = TestingSessionLocal()
     # Create articles with different sentiments
     for i, sentiment in enumerate([0.8, -0.5, 0.3]):
         article = Article(
@@ -182,16 +141,10 @@ def test_get_keyword_articles_sorting(sample_keyword):
             sentiment_overall=sentiment,
             sentiment_classification="NEUTRAL"
         )
-        db.add(article)
-        db.flush()
-        db.execute(
-            keyword_article_association.insert().values(
-                keyword_id=sample_keyword.id,
-                article_id=article.id
-            )
-        )
-    db.commit()
-    db.close()
+        db_session.add(article)
+        db_session.flush()
+        db_session.add(KeywordArticle(keyword_id=sample_keyword.id, article_id=article.id, relevance_score=0.9))
+    db_session.commit()
 
     # Test sorting by sentiment
     response = client.get(f"/api/keywords/{sample_keyword.id}/articles?sort_by=sentiment")
@@ -200,7 +153,7 @@ def test_get_keyword_articles_sorting(sample_keyword):
     assert len(data["results"]) > 0
 
 
-def test_get_keyword_relations(sample_keyword):
+def test_get_keyword_relations(client, sample_keyword):
     """Test getting keyword relationships."""
     response = client.get(f"/api/keywords/{sample_keyword.id}/relations")
     assert response.status_code == 200
@@ -212,7 +165,7 @@ def test_get_keyword_relations(sample_keyword):
 
 # ==================== Sentiment Endpoints Tests ====================
 
-def test_get_keyword_sentiment(sample_keyword, sample_article):
+def test_get_keyword_sentiment(client, sample_keyword, sample_article):
     """Test getting keyword sentiment statistics."""
     response = client.get(f"/api/sentiment/keywords/{sample_keyword.id}/sentiment")
     assert response.status_code == 200
@@ -223,9 +176,8 @@ def test_get_keyword_sentiment(sample_keyword, sample_article):
     assert data["total_articles"] > 0
 
 
-def test_get_keyword_sentiment_timeline(sample_keyword):
+def test_get_keyword_sentiment_timeline(client, db_session, sample_keyword):
     """Test getting sentiment timeline."""
-    db = TestingSessionLocal()
     # Create sentiment trends
     for i in range(7):
         trend = SentimentTrend(
@@ -236,9 +188,8 @@ def test_get_keyword_sentiment_timeline(sample_keyword):
             negative_count=2,
             neutral_count=5
         )
-        db.add(trend)
-    db.commit()
-    db.close()
+        db_session.add(trend)
+    db_session.commit()
 
     response = client.get(f"/api/sentiment/keywords/{sample_keyword.id}/sentiment/timeline?days=7")
     assert response.status_code == 200
@@ -248,14 +199,12 @@ def test_get_keyword_sentiment_timeline(sample_keyword):
     assert len(data["timeline"]) > 0
 
 
-def test_compare_keywords_sentiment():
+def test_compare_keywords_sentiment(client, db_session):
     """Test comparing sentiment across keywords."""
-    db = TestingSessionLocal()
-    # Create keywords with articles
     keyword1 = Keyword(keyword_en="Thailand", keyword_th="ไทย", category="country")
     keyword2 = Keyword(keyword_en="Vietnam", keyword_th="เวียดนาม", category="country")
-    db.add_all([keyword1, keyword2])
-    db.commit()
+    db_session.add_all([keyword1, keyword2])
+    db_session.commit()
 
     # Add articles with different sentiments
     article1 = Article(
@@ -276,13 +225,12 @@ def test_compare_keywords_sentiment():
         sentiment_overall=-0.5,
         sentiment_classification="NEGATIVE"
     )
-    db.add_all([article1, article2])
-    db.flush()
+    db_session.add_all([article1, article2])
+    db_session.flush()
 
-    db.execute(keyword_article_association.insert().values(keyword_id=keyword1.id, article_id=article1.id))
-    db.execute(keyword_article_association.insert().values(keyword_id=keyword2.id, article_id=article2.id))
-    db.commit()
-    db.close()
+    db_session.add(KeywordArticle(keyword_id=keyword1.id, article_id=article1.id, relevance_score=0.9))
+    db_session.add(KeywordArticle(keyword_id=keyword2.id, article_id=article2.id, relevance_score=0.9))
+    db_session.commit()
 
     response = client.get(f"/api/sentiment/keywords/compare?keyword_ids={keyword1.id},{keyword2.id}")
     assert response.status_code == 200
@@ -292,7 +240,7 @@ def test_compare_keywords_sentiment():
     assert "summary" in data
 
 
-def test_get_article_sentiment_details(sample_article):
+def test_get_article_sentiment_details(client, sample_article):
     """Test getting detailed sentiment for an article."""
     response = client.get(f"/api/sentiment/articles/{sample_article.id}/sentiment")
     assert response.status_code == 200
@@ -305,7 +253,7 @@ def test_get_article_sentiment_details(sample_article):
 
 # ==================== Suggestion Endpoints Tests ====================
 
-def test_create_suggestion():
+def test_create_suggestion(client):
     """Test creating a keyword suggestion."""
     suggestion_data = {
         "keyword_en": "Singapore",
@@ -321,7 +269,7 @@ def test_create_suggestion():
     assert data["suggestion"]["votes"] == 1
 
 
-def test_create_duplicate_suggestion():
+def test_create_duplicate_suggestion(client):
     """Test creating duplicate suggestion increments votes."""
     suggestion_data = {
         "keyword_en": "Malaysia",
@@ -339,7 +287,7 @@ def test_create_duplicate_suggestion():
     assert response2.json()["suggestion"]["votes"] == 2
 
 
-def test_get_suggestions():
+def test_get_suggestions(client):
     """Test retrieving suggestions."""
     # Create suggestions
     for i in range(3):
@@ -356,7 +304,7 @@ def test_get_suggestions():
     assert len(data["suggestions"]) == 3
 
 
-def test_get_suggestion_by_id():
+def test_get_suggestion_by_id(client):
     """Test getting a specific suggestion."""
     # Create suggestion
     suggestion_data = {"keyword_en": "Indonesia", "category": "country"}
@@ -370,7 +318,7 @@ def test_get_suggestion_by_id():
     assert data["keyword_en"] == "Indonesia"
 
 
-def test_vote_suggestion():
+def test_vote_suggestion(client):
     """Test voting for a suggestion."""
     # Create suggestion
     suggestion_data = {"keyword_en": "Laos", "category": "country"}
@@ -388,7 +336,7 @@ def test_vote_suggestion():
 
 # ==================== Document Upload Tests ====================
 
-def test_upload_text_document():
+def test_upload_text_document(client):
     """Test uploading a text document."""
     content = "This is a test document about Thailand. The country has beautiful beaches and friendly people. Tourism is booming."
     file = io.BytesIO(content.encode('utf-8'))
@@ -404,7 +352,7 @@ def test_upload_text_document():
     assert response.status_code in [200, 500]  # May fail without services
 
 
-def test_upload_unsupported_file():
+def test_upload_unsupported_file(client):
     """Test uploading unsupported file type."""
     file = io.BytesIO(b"test content")
 
@@ -419,7 +367,7 @@ def test_upload_unsupported_file():
 
 # ==================== Search Endpoints Tests ====================
 
-def test_semantic_search_endpoint():
+def test_semantic_search_endpoint(client):
     """Test semantic search endpoint structure."""
     response = client.get("/api/search/semantic?q=tourism+thailand")
 
@@ -432,7 +380,7 @@ def test_semantic_search_endpoint():
         assert "results" in data
 
 
-def test_find_similar_articles(sample_article):
+def test_find_similar_articles(client, sample_article):
     """Test finding similar articles endpoint."""
     response = client.get(f"/api/search/similar/{sample_article.id}")
 
@@ -442,17 +390,14 @@ def test_find_similar_articles(sample_article):
 
 # ==================== Integration Tests ====================
 
-def test_full_workflow():
+def test_full_workflow(client, db_session):
     """Test complete workflow: create keyword, add article, get sentiment."""
-    db = TestingSessionLocal()
 
-    # Create keyword
     keyword = Keyword(keyword_en="TestCountry", keyword_th="ทดสอบ", category="country")
-    db.add(keyword)
-    db.commit()
-    db.refresh(keyword)
+    db_session.add(keyword)
+    db_session.commit()
+    db_session.refresh(keyword)
 
-    # Create article
     article = Article(
         title="Test Article",
         summary="Summary",
@@ -460,20 +405,14 @@ def test_full_workflow():
         source="Test",
         published_date=datetime.utcnow(),
         sentiment_overall=0.6,
-        sentiment_classification="POSITIVE"
+        sentiment_classification="POSITIVE",
     )
-    db.add(article)
-    db.flush()
+    db_session.add(article)
+    db_session.flush()
 
-    # Associate
-    db.execute(keyword_article_association.insert().values(
-        keyword_id=keyword.id,
-        article_id=article.id
-    ))
-    db.commit()
-    db.close()
+    db_session.add(KeywordArticle(keyword_id=keyword.id, article_id=article.id, relevance_score=0.9))
+    db_session.commit()
 
-    # Test API calls
     response1 = client.get("/api/keywords/")
     assert response1.status_code == 200
 

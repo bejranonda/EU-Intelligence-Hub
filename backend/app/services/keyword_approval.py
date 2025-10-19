@@ -1,27 +1,22 @@
-"""
-AI-powered keyword approval and management system.
+"""AI-powered keyword approval and management service (Gemini only)."""
 
-This service uses Gemini AI to intelligently:
-1. Evaluate if a suggested keyword is significant enough to track
-2. Merge similar keywords to avoid duplication
-3. Group related keywords for better news discovery
-"""
 import logging
-from typing import List, Dict, Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import and_
+from typing import Dict, List, Optional, Tuple
 
-from app.services.gemini_client import get_gemini_client
+from sqlalchemy import and_
+from sqlalchemy.orm import Session
+
+from app.models.models import Keyword, KeywordEvaluation, KeywordSuggestion
 from app.services.embeddings import EmbeddingGenerator
-from app.models.models import KeywordSuggestion, Keyword
+from app.services.gemini_client import get_gemini_client
 
 logger = logging.getLogger(__name__)
 
 
 class KeywordApprovalService:
-    """Service for AI-powered keyword approval and management."""
+    """Gemini-backed keyword evaluation and approval workflow."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.embedding_service = EmbeddingGenerator()
         self.gemini_client = get_gemini_client()
 
@@ -29,197 +24,145 @@ class KeywordApprovalService:
         self,
         keyword: str,
         category: str = "general",
-        reason: str = None
+        reason: Optional[str] = None,
     ) -> Dict:
-        """
-        Use AI to evaluate if a keyword is significant enough to track.
+        """Score keyword viability for EU intelligence monitoring."""
 
-        Args:
-            keyword: The keyword to evaluate
-            category: Category of the keyword
-            reason: User's reason for suggesting (if provided)
-
-        Returns:
-            dict: {
-                "is_significant": bool,
-                "confidence": float (0-1),
-                "reasoning": str,
-                "searchability": str ("easy", "moderate", "difficult"),
-                "suggested_alternatives": List[str],
-                "news_potential": str ("high", "medium", "low")
-            }
-        """
-        prompt = f"""Evaluate this keyword for a European news monitoring system that tracks media coverage:
+        prompt = f"""
+Evaluate the following keyword for a European Union intelligence news monitoring platform.
 
 Keyword: "{keyword}"
 Category: {category}
-{f'User Reason: {reason}' if reason else ''}
+{f'User context: {reason}' if reason else ''}
 
-Analyze and provide:
-1. Is this keyword SIGNIFICANT enough to track in European news? (Yes/No)
-   - Consider: International relevance, news frequency, geopolitical importance
-
-2. SEARCHABILITY: How easy is it to find news articles about this keyword?
-   - "easy": Well-known entities (countries, major organizations, prominent figures)
-   - "moderate": Specific topics, emerging trends, regional issues
-   - "difficult": Very niche, unclear, too broad or too narrow
-
-3. NEWS POTENTIAL: How frequently does this topic appear in European media?
-   - "high": Daily coverage expected (major countries, ongoing issues)
-   - "medium": Weekly coverage (specific topics, regional matters)
-   - "low": Rare mentions (very niche topics)
-
-4. If searchability is "moderate" or "difficult", suggest 2-3 ALTERNATIVE keywords that would:
-   - Be more specific and easier to search
-   - Or broader terms that encompass this keyword
-   - Related terms that appear more frequently in news
-
-5. REASONING: Brief explanation of your evaluation (2-3 sentences)
-
-Respond in JSON format:
+Assess the keyword and respond in JSON with:
 {{
-    "is_significant": true/false,
-    "confidence": 0.0-1.0,
-    "searchability": "easy/moderate/difficult",
-    "news_potential": "high/medium/low",
-    "suggested_alternatives": ["keyword1", "keyword2", "keyword3"],
-    "reasoning": "explanation here"
-}}"""
+  "searchability_score": <integer 1-10>,
+  "significance_score": <integer 1-10>,
+  "specificity": "broad" | "narrow" | "just_right",
+  "reasoning": "Two-sentence summary explaining the scores",
+  "suggested_alternatives": ["optional better phrasing", ...],
+  "notes": "Additional short insight if needed"
+}}
+
+Scoring guidance:
+- searchability_score reflects how likely European-focused news sources will return relevant, recent results.
+- significance_score reflects geopolitical/strategic value to EU monitoring (trade, policy, security, economy, etc.).
+- specificity describes whether the keyword is overly broad, overly narrow, or appropriate for targeted monitoring.
+
+Ensure scores are integers within 1-10. If no alternatives, return an empty array.
+"""
 
         try:
             response = await self.gemini_client.generate_json(prompt)
 
-            # Validate response
             if not isinstance(response, dict):
-                logger.warning(f"Invalid response format for keyword: {keyword}")
+                logger.warning("Invalid Gemini evaluation response for '%s'", keyword)
                 return self._default_evaluation()
 
-            # Ensure all required fields
+            searchability = self._coerce_score(response.get("searchability_score"))
+            significance = self._coerce_score(response.get("significance_score"))
+            specificity = response.get("specificity", "unknown") or "unknown"
+            reasoning = response.get("reasoning", "AI evaluation completed")
+            alternatives = response.get("suggested_alternatives") or []
+            notes = response.get("notes", "")
+
             result = {
-                "is_significant": response.get("is_significant", False),
-                "confidence": float(response.get("confidence", 0.5)),
-                "searchability": response.get("searchability", "moderate"),
-                "news_potential": response.get("news_potential", "medium"),
-                "suggested_alternatives": response.get("suggested_alternatives", []),
-                "reasoning": response.get("reasoning", "AI evaluation completed")
+                "searchability_score": searchability,
+                "significance_score": significance,
+                "specificity": specificity,
+                "reasoning": reasoning,
+                "suggested_alternatives": alternatives,
+                "notes": notes,
+                "raw": response,
             }
 
-            logger.info(f"Keyword evaluation for '{keyword}': significant={result['is_significant']}, "
-                       f"searchability={result['searchability']}")
+            logger.info(
+                "Keyword '%s' evaluated: searchability=%s significance=%s specificity=%s",
+                keyword,
+                searchability,
+                significance,
+                specificity,
+            )
 
             return result
 
-        except Exception as e:
-            logger.error(f"Error evaluating keyword '{keyword}': {e}")
+        except Exception as exc:  # pragma: no cover
+            logger.error("Gemini evaluation failed for '%s': %s", keyword, exc)
             return self._default_evaluation()
 
     async def find_similar_keywords(
         self,
         keyword: str,
         db: Session,
-        similarity_threshold: float = 0.85
+        similarity_threshold: float = 0.85,
     ) -> List[Dict]:
-        """
-        Find existing keywords that are similar to the suggested one.
+        """Locate existing keywords with high embedding similarity."""
 
-        Args:
-            keyword: The keyword to compare
-            db: Database session
-            similarity_threshold: Minimum similarity score (0-1)
-
-        Returns:
-            List of similar keywords with similarity scores
-        """
         try:
-            # Generate embedding for the new keyword
-            keyword_embedding = self.embedding_service.generate_embedding(keyword)
+            candidate_embedding = self.embedding_service.generate_embedding(keyword)
+            existing_keywords = db.query(Keyword).filter(Keyword.embedding.isnot(None)).all()
 
-            # Get all existing keywords with embeddings
-            existing_keywords = db.query(Keyword).filter(
-                Keyword.embedding.isnot(None)
-            ).all()
-
-            similar_keywords = []
+            similar: List[Dict] = []
             for existing in existing_keywords:
-                if existing.embedding:
-                    similarity = self.embedding_service.compute_similarity(
-                        keyword_embedding,
-                        existing.embedding
-                    )
+                if not existing.embedding:
+                    continue
 
-                    if similarity >= similarity_threshold:
-                        similar_keywords.append({
+                similarity = self.embedding_service.compute_similarity(
+                    candidate_embedding,
+                    existing.embedding,
+                )
+
+                if similarity >= similarity_threshold:
+                    similar.append(
+                        {
                             "id": existing.id,
                             "keyword_en": existing.keyword_en,
                             "keyword_th": existing.keyword_th,
                             "category": existing.category,
-                            "similarity": similarity
-                        })
+                            "similarity": similarity,
+                        }
+                    )
 
-            # Sort by similarity descending
-            similar_keywords.sort(key=lambda x: x["similarity"], reverse=True)
+            similar.sort(key=lambda item: item["similarity"], reverse=True)
+            return similar
 
-            return similar_keywords
-
-        except Exception as e:
-            logger.error(f"Error finding similar keywords for '{keyword}': {e}")
+        except Exception as exc:  # pragma: no cover
+            logger.error("Failed to compute similar keywords for '%s': %s", keyword, exc)
             return []
 
     async def suggest_keyword_merge(
         self,
         keyword: str,
-        similar_keywords: List[str]
+        similar_keywords: List[str],
     ) -> Dict:
-        """
-        Use AI to determine if keywords should be merged or kept separate.
+        """Ask Gemini whether the keyword should merge with similar ones."""
 
-        Args:
-            keyword: The new keyword
-            similar_keywords: List of similar existing keywords
-
-        Returns:
-            dict: {
-                "should_merge": bool,
-                "merge_with": str (keyword to merge with),
-                "merged_keyword": str (suggested merged name),
-                "reasoning": str
-            }
-        """
         if not similar_keywords:
-            return {
-                "should_merge": False,
-                "merge_with": None,
-                "merged_keyword": None,
-                "reasoning": "No similar keywords found"
-            }
+            return self._default_merge_result()
 
-        prompt = f"""Analyze these keywords for a news monitoring system:
+        prompt = f"""
+Analyze these keywords for a news monitoring system:
 
 New Suggested Keyword: "{keyword}"
-Existing Similar Keywords: {', '.join([f'"{k}"' for k in similar_keywords])}
+Existing Similar Keywords: {', '.join([f'"{kw}"' for kw in similar_keywords])}
 
 Determine:
 1. Should the new keyword be MERGED with an existing one? (Yes/No)
-   - Merge if they represent the same entity/concept
-   - Keep separate if they are distinct despite similarity
-
-2. If YES to merge:
-   - Which existing keyword should it merge with?
-   - What should be the final merged keyword name?
-
-3. Brief reasoning (1-2 sentences)
+2. If yes, which keyword and what final merged phrasing should be used?
+3. Provide a concise reasoning (max 2 sentences).
 
 Respond in JSON:
 {{
-    "should_merge": true/false,
-    "merge_with": "existing keyword name or null",
-    "merged_keyword": "final name or null",
-    "reasoning": "explanation"
-}}"""
+  "should_merge": true/false,
+  "merge_with": "existing keyword" | null,
+  "merged_keyword": "final merged phrasing" | null,
+  "reasoning": "explanation"
+}}
+"""
 
         try:
             response = await self.gemini_client.generate_json(prompt)
-
             if not isinstance(response, dict):
                 return self._default_merge_result()
 
@@ -227,247 +170,286 @@ Respond in JSON:
                 "should_merge": response.get("should_merge", False),
                 "merge_with": response.get("merge_with"),
                 "merged_keyword": response.get("merged_keyword"),
-                "reasoning": response.get("reasoning", "Merge analysis completed")
+                "reasoning": response.get("reasoning", "Merge analysis completed"),
             }
 
-        except Exception as e:
-            logger.error(f"Error analyzing keyword merge: {e}")
+        except Exception as exc:  # pragma: no cover
+            logger.error("Merge analysis failed for '%s': %s", keyword, exc)
             return self._default_merge_result()
 
-    async def process_suggestion(
-        self,
-        suggestion_id: int,
-        db: Session
-    ) -> Dict:
-        """
-        Complete AI-powered processing of a keyword suggestion.
+    async def process_suggestion(self, suggestion_id: int, db: Session) -> Dict:
+        """Evaluate and act on a keyword suggestion."""
 
-        This is the main entry point that:
-        1. Evaluates significance
-        2. Checks for duplicates/similar keywords
-        3. Determines if merge is needed
-        4. Updates suggestion status
-
-        Args:
-            suggestion_id: ID of the KeywordSuggestion
-            db: Database session
-
-        Returns:
-            dict: Processing result with decision and reasoning
-        """
-        # Get suggestion
-        suggestion = db.query(KeywordSuggestion).filter(
-            KeywordSuggestion.id == suggestion_id
-        ).first()
+        suggestion = (
+            db.query(KeywordSuggestion)
+            .filter(KeywordSuggestion.id == suggestion_id)
+            .first()
+        )
 
         if not suggestion:
             return {"error": "Suggestion not found"}
 
-        logger.info(f"Processing suggestion: {suggestion.keyword_en}")
+        logger.info("Processing suggestion %s (%s)", suggestion_id, suggestion.keyword_en)
 
-        # Step 1: Evaluate significance
         evaluation = await self.evaluate_keyword_significance(
-            keyword=suggestion.keyword_en,
+            suggestion.keyword_en,
             category=suggestion.category,
-            reason=suggestion.reason
+            reason=suggestion.reason,
         )
 
-        result = {
+        result: Dict = {
             "suggestion_id": suggestion_id,
             "keyword": suggestion.keyword_en,
             "evaluation": evaluation,
             "action": None,
-            "reasoning": []
+            "reasoning": [],
         }
 
-        # Step 2: If not significant, reject
-        if not evaluation["is_significant"] or evaluation["confidence"] < 0.6:
-            suggestion.status = "rejected"
-            db.commit()
+        created_keyword: Optional[Keyword] = None
+        decision = "pending"
 
-            result["action"] = "rejected"
-            result["reasoning"].append(f"Not significant enough: {evaluation['reasoning']}")
-
-            if evaluation["suggested_alternatives"]:
-                result["reasoning"].append(
-                    f"Consider alternatives: {', '.join(evaluation['suggested_alternatives'][:3])}"
-                )
-
-            return result
-
-        # Step 3: Check for similar existing keywords
-        similar = await self.find_similar_keywords(
-            keyword=suggestion.keyword_en,
-            db=db,
-            similarity_threshold=0.85
-        )
-
-        if similar:
-            result["similar_keywords"] = similar[:3]  # Top 3
-
-            # Step 4: Determine if merge is needed
-            merge_analysis = await self.suggest_keyword_merge(
-                keyword=suggestion.keyword_en,
-                similar_keywords=[k["keyword_en"] for k in similar[:3]]
-            )
-
-            result["merge_analysis"] = merge_analysis
-
-            if merge_analysis["should_merge"]:
-                suggestion.status = "merged"
+        if (
+            evaluation["searchability_score"] >= 7
+            and evaluation["significance_score"] >= 6
+        ):
+            created_keyword = await self._approve_keyword(db, suggestion)
+            decision = "approved"
+            result["action"] = "approved"
+            result["keyword_id"] = created_keyword.id if created_keyword else None
+            result["reasoning"].append(evaluation["reasoning"])
+        else:
+            merge_info = await self._attempt_merge(db, suggestion)
+            if merge_info:
+                created_keyword, merge_reason = merge_info
+                decision = "merged"
                 result["action"] = "merged"
-                result["reasoning"].append(
-                    f"Merged with '{merge_analysis['merge_with']}': {merge_analysis['reasoning']}"
-                )
+                result["keyword_id"] = created_keyword.id if created_keyword else None
+                result["reasoning"].append(merge_reason)
+            else:
+                suggestion.status = "pending_review"
                 db.commit()
-                return result
+                decision = "pending_review"
+                result["action"] = "pending_review"
+                result["reasoning"].append(
+                    evaluation["reasoning"] + " — queued for manual review"
+                )
 
-        # Step 5: If difficult to search, suggest alternatives
-        if evaluation["searchability"] == "difficult":
-            suggestion.status = "pending"
-            result["action"] = "pending_alternatives"
-            result["reasoning"].append(
-                f"Difficult to search. Consider: {', '.join(evaluation['suggested_alternatives'][:3])}"
-            )
-            db.commit()
-            return result
-
-        # Step 6: Approve and create keyword
-        suggestion.status = "approved"
-
-        # Translate keyword if not already translated
-        keyword_th = suggestion.keyword_th
-        if not keyword_th:
-            translations = await self.translate_keyword(suggestion.keyword_en, ['th'])
-            keyword_th = translations.get('th')
-            logger.info(f"Auto-translated '{suggestion.keyword_en}' to Thai: {keyword_th}")
-
-        # Create new keyword
-        new_keyword = Keyword(
-            keyword_en=suggestion.keyword_en,
-            keyword_th=keyword_th,
-            category=suggestion.category or "general",
-            embedding=self.embedding_service.generate_embedding(suggestion.keyword_en)
-        )
-        db.add(new_keyword)
-        db.commit()
-
-        result["action"] = "approved"
-        result["keyword_id"] = new_keyword.id
-        result["translated_to"] = {"th": keyword_th} if keyword_th else {}
-        result["reasoning"].append(
-            f"Approved: {evaluation['reasoning']}"
+        self._record_evaluation(
+            db=db,
+            suggestion=suggestion,
+            keyword=created_keyword,
+            evaluation=evaluation,
+            decision=decision,
         )
 
-        # Trigger immediate news search for this keyword
-        try:
-            from app.tasks.keyword_search import search_keyword_immediately
-            search_task = search_keyword_immediately.delay(new_keyword.id)
-            result["search_task_id"] = search_task.id
-            result["reasoning"].append("Immediate news search triggered")
-            logger.info(f"Triggered immediate search for keyword ID: {new_keyword.id}")
-        except Exception as e:
-            logger.error(f"Failed to trigger immediate search: {e}")
-            result["reasoning"].append("Warning: Immediate search could not be triggered")
-
-        logger.info(f"Keyword '{suggestion.keyword_en}' approved and created (ID: {new_keyword.id})")
+        if created_keyword:
+            self._trigger_immediate_search(created_keyword.id)
 
         return result
-
-    def _default_evaluation(self) -> Dict:
-        """Return default evaluation when AI fails."""
-        return {
-            "is_significant": False,
-            "confidence": 0.5,
-            "searchability": "moderate",
-            "news_potential": "medium",
-            "suggested_alternatives": [],
-            "reasoning": "Unable to evaluate automatically"
-        }
-
-    def _default_merge_result(self) -> Dict:
-        """Return default merge result when AI fails."""
-        return {
-            "should_merge": False,
-            "merge_with": None,
-            "merged_keyword": None,
-            "reasoning": "Unable to analyze merge automatically"
-        }
 
     async def translate_keyword(
         self,
         keyword_en: str,
-        target_languages: List[str] = None
+        target_languages: Optional[List[str]] = None,
     ) -> Dict[str, str]:
-        """
-        Translate keyword to other defined languages using AI.
+        """Translate keywords via Gemini."""
 
-        Args:
-            keyword_en: English keyword to translate
-            target_languages: List of target language codes (default: ['th'])
-
-        Returns:
-            dict: {language_code: translated_keyword}
-        """
         if target_languages is None:
-            target_languages = ['th']  # Default to Thai
+            target_languages = [
+                "th",
+                "de",
+                "fr",
+                "es",
+                "it",
+                "pl",
+                "sv",
+                "nl",
+            ]
 
         language_names = {
-            'th': 'Thai',
-            'de': 'German',
-            'fr': 'French',
-            'es': 'Spanish'
+            "th": "Thai",
+            "de": "German",
+            "fr": "French",
+            "es": "Spanish",
+            "it": "Italian",
+            "pl": "Polish",
+            "sv": "Swedish",
+            "nl": "Dutch",
         }
 
-        # Build prompt for translations
-        languages_str = ', '.join([language_names.get(code, code) for code in target_languages])
+        languages_str = ", ".join(language_names.get(code, code) for code in target_languages)
 
-        prompt = f"""Translate this keyword for a news monitoring system:
+        prompt = f"""
+Translate this keyword for a multilingual European news monitoring system.
 
 English Keyword: "{keyword_en}"
+Target languages: {languages_str}
 
-Provide translations to: {languages_str}
-
-Requirements:
-1. Translate accurately for news/media context
-2. Use the most common/official term
-3. For proper nouns (countries, organizations, names), use the standard translation
-4. Keep it concise (1-3 words maximum)
-
-Respond in JSON format with language codes as keys:
-{{
-{', '.join([f'  "{code}": "translated keyword"' for code in target_languages])}
-}}
-
-Example:
-{{
-  "th": "ไทยแลนด์",
-  "de": "Thailand"
-}}"""
+Respond in JSON with language codes as keys using concise terminology suitable for search queries.
+"""
 
         try:
             response = await self.gemini_client.generate_json(prompt)
-
             if not isinstance(response, dict):
-                logger.warning(f"Invalid translation response for keyword: {keyword_en}")
+                logger.warning("Invalid translation response for '%s'", keyword_en)
                 return {}
 
-            # Validate translations exist
-            translations = {}
+            translations: Dict[str, str] = {}
             for lang_code in target_languages:
-                if lang_code in response and response[lang_code]:
-                    translations[lang_code] = response[lang_code]
+                translated = response.get(lang_code)
+                if translated:
+                    translations[lang_code] = translated
                 else:
-                    logger.warning(f"Missing translation for language: {lang_code}")
-
-            logger.info(f"Translated '{keyword_en}' to {len(translations)} languages")
+                    logger.warning("Missing %s translation for '%s'", lang_code, keyword_en)
 
             return translations
 
-        except Exception as e:
-            logger.error(f"Error translating keyword '{keyword_en}': {e}")
+        except Exception as exc:  # pragma: no cover
+            logger.error("Translation failed for '%s': %s", keyword_en, exc)
             return {}
 
+    def _coerce_score(self, value: Optional[float], default: int = 5) -> int:
+        try:
+            score = int(round(float(value)))
+            return max(1, min(10, score))
+        except (TypeError, ValueError):
+            return default
 
-# Global instance
+    async def _approve_keyword(
+        self,
+        db: Session,
+        suggestion: KeywordSuggestion,
+    ) -> Keyword:
+        suggestion.status = "approved"
+
+        keyword_th = suggestion.keyword_th
+        if not keyword_th:
+            translations = await self.translate_keyword(suggestion.keyword_en, ["th"])
+            keyword_th = translations.get("th")
+
+        new_keyword = Keyword(
+            keyword_en=suggestion.keyword_en.strip(),
+            keyword_th=keyword_th,
+            category=suggestion.category or "general",
+            embedding=self.embedding_service.generate_embedding(suggestion.keyword_en),
+        )
+
+        db.add(new_keyword)
+        db.commit()
+        db.refresh(new_keyword)
+
+        logger.info("Keyword '%s' approved (ID=%s)", new_keyword.keyword_en, new_keyword.id)
+        return new_keyword
+
+    async def _attempt_merge(
+        self,
+        db: Session,
+        suggestion: KeywordSuggestion,
+    ) -> Optional[Tuple[Keyword, str]]:
+        pending_matches = (
+            db.query(KeywordSuggestion)
+            .filter(
+                KeywordSuggestion.status == "pending",
+                KeywordSuggestion.id != suggestion.id,
+                and_(
+                    KeywordSuggestion.keyword_en.ilike(f"%{suggestion.keyword_en}%"),
+                    KeywordSuggestion.category == suggestion.category,
+                ),
+            )
+            .all()
+        )
+
+        if not pending_matches:
+            return None
+
+        merge_prompt = await self.suggest_keyword_merge(
+            suggestion.keyword_en,
+            [match.keyword_en for match in pending_matches[:3]],
+        )
+
+        if not merge_prompt.get("should_merge"):
+            return None
+
+        merged_keyword_text = merge_prompt.get("merged_keyword") or suggestion.keyword_en
+
+        keyword_th = suggestion.keyword_th
+        if not keyword_th:
+            translations = await self.translate_keyword(merged_keyword_text, ["th"])
+            keyword_th = translations.get("th")
+
+        merged_keyword = Keyword(
+            keyword_en=merged_keyword_text,
+            keyword_th=keyword_th,
+            category=suggestion.category or "general",
+            embedding=self.embedding_service.generate_embedding(merged_keyword_text),
+        )
+
+        db.add(merged_keyword)
+        suggestion.status = "merged"
+
+        for match in pending_matches:
+            match.status = "merged"
+
+        db.commit()
+        db.refresh(merged_keyword)
+
+        merge_reason = merge_prompt.get("reasoning", "Merged based on similarity")
+        logger.info("Merged keyword '%s' into '%s'", suggestion.keyword_en, merged_keyword.keyword_en)
+
+        return merged_keyword, merge_reason
+
+    def _record_evaluation(
+        self,
+        db: Session,
+        suggestion: KeywordSuggestion,
+        keyword: Optional[Keyword],
+        evaluation: Dict,
+        decision: str,
+    ) -> None:
+        record = KeywordEvaluation(
+            suggestion_id=suggestion.id,
+            keyword_id=keyword.id if keyword else None,
+            keyword_text=suggestion.keyword_en,
+            searchability_score=evaluation.get("searchability_score"),
+            significance_score=evaluation.get("significance_score"),
+            specificity=evaluation.get("specificity"),
+            decision=decision,
+            reasoning=evaluation.get("reasoning"),
+            evaluation_metadata=evaluation.get("raw"),
+        )
+
+        db.add(record)
+        db.commit()
+
+    def _trigger_immediate_search(self, keyword_id: int) -> None:
+        try:
+            from app.tasks.keyword_search import search_keyword_immediately
+
+            search_task = search_keyword_immediately.delay(keyword_id)
+            logger.info(
+                "Immediate search queued for keyword %s (task=%s)", keyword_id, search_task.id
+            )
+        except Exception as exc:  # pragma: no cover
+            logger.error("Failed to trigger immediate search for keyword %s: %s", keyword_id, exc)
+
+    def _default_evaluation(self) -> Dict:
+        return {
+            "searchability_score": 5,
+            "significance_score": 5,
+            "specificity": "unknown",
+            "reasoning": "Unable to evaluate automatically",
+            "suggested_alternatives": [],
+            "notes": "",
+            "raw": {},
+        }
+
+    def _default_merge_result(self) -> Dict:
+        return {
+            "should_merge": False,
+            "merge_with": None,
+            "merged_keyword": None,
+            "reasoning": "Unable to analyze merge automatically",
+        }
+
+
 keyword_approval_service = KeywordApprovalService()

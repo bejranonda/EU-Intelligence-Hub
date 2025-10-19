@@ -1,0 +1,22 @@
+FROM postgres:16-alpine
+
+# Install required packages
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    bash \
+    gzip \
+    curl
+
+# Copy backup script
+COPY scripts/backup.py /usr/local/bin/backup.py
+RUN chmod +x /usr/local/bin/backup.py
+
+# Create backup directory
+RUN mkdir -p /backups && chmod 755 /backups
+
+# Set working directory
+WORKDIR /backups
+
+# Default command - backup
+CMD ["python3", "/usr/local/bin/backup.py", "backup", "--backup-dir", "/backups"]

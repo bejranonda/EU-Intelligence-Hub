@@ -3,11 +3,11 @@ from sqlalchemy import (
     Column, Integer, String, Float, Text, DateTime, Date, Boolean,
     ForeignKey, CheckConstraint, UniqueConstraint, Index
 )
-from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from pgvector.sqlalchemy import Vector
+
 from app.database import Base
+from app.db.types import ArrayType, JSONBType, VectorType
 
 
 class Keyword(Base):
@@ -17,17 +17,28 @@ class Keyword(Base):
     id = Column(Integer, primary_key=True, index=True)
     keyword_en = Column(String(255), unique=True, nullable=False, index=True)
     keyword_th = Column(String(255))
+    keyword_de = Column(String(255))
+    keyword_fr = Column(String(255))
+    keyword_es = Column(String(255))
+    keyword_it = Column(String(255))
+    keyword_pl = Column(String(255))
+    keyword_sv = Column(String(255))
+    keyword_nl = Column(String(255))
     category = Column(String(100))
     popularity_score = Column(Float, default=0.0)
     search_count = Column(Integer, default=0)
     last_searched = Column(DateTime, nullable=True)  # Track when keyword was last searched for news
-    embedding = Column(Vector(384))
+    next_search_after = Column(DateTime, nullable=True)
+    search_priority = Column(Integer, default=0)
+    embedding = Column(VectorType(384))
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     # Relationships
     articles = relationship("KeywordArticle", back_populates="keyword", cascade="all, delete-orphan")
     sentiment_trends = relationship("SentimentTrend", back_populates="keyword", cascade="all, delete-orphan")
+    evaluations = relationship("KeywordEvaluation", back_populates="keyword", cascade="all, delete-orphan")
+    queued_searches = relationship("KeywordSearchQueue", back_populates="keyword", cascade="all, delete-orphan")
 
 
 class Article(Base):
@@ -49,7 +60,7 @@ class Article(Base):
     )
     sentiment_classification = Column(String(20))  # Added field for sentiment classification
     credibility_score = Column(Float, default=0.5)
-    embedding = Column(Vector(384))
+    embedding = Column(VectorType(384))
 
     # Sentiment fields
     sentiment_overall = Column(Float)  # -1.0 to 1.0
@@ -100,6 +111,13 @@ class KeywordSuggestion(Base):
     id = Column(Integer, primary_key=True, index=True)
     keyword_en = Column(String(255), nullable=False, index=True)
     keyword_th = Column(String(255))
+    keyword_de = Column(String(255))
+    keyword_fr = Column(String(255))
+    keyword_es = Column(String(255))
+    keyword_it = Column(String(255))
+    keyword_pl = Column(String(255))
+    keyword_sv = Column(String(255))
+    keyword_nl = Column(String(255))
     category = Column(String(100), default='general')
     reason = Column(Text)
     contact_email = Column(String(100))
@@ -107,6 +125,8 @@ class KeywordSuggestion(Base):
     votes = Column(Integer, default=1)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    evaluations = relationship("KeywordEvaluation", back_populates="suggestion", cascade="all, delete-orphan")
 
 
 class Document(Base):
@@ -118,7 +138,7 @@ class Document(Base):
     upload_date = Column(DateTime, default=func.now())
     extracted_text = Column(Text)
     source_type = Column(String(50))
-    doc_metadata = Column("metadata", JSONB)  # renamed to avoid SQLAlchemy reserved word
+    doc_metadata = Column("metadata", JSONBType())  # renamed to avoid SQLAlchemy reserved word
 
 
 class SentimentTrend(Base):
@@ -133,7 +153,7 @@ class SentimentTrend(Base):
     positive_count = Column(Integer)
     negative_count = Column(Integer)
     neutral_count = Column(Integer)
-    top_sources = Column(JSONB)  # Which sources were most positive/negative
+    top_sources = Column(JSONBType())  # Which sources were most positive/negative
 
     # Relationships
     keyword = relationship("Keyword", back_populates="sentiment_trends")
@@ -160,3 +180,82 @@ class ComparativeSentiment(Base):
     sentiment_gap = Column(Float)  # difference between the two
     article_count_primary = Column(Integer)
     article_count_comparison = Column(Integer)
+
+
+class KeywordEvaluation(Base):
+    """AI evaluation metadata for keyword suggestions and decisions."""
+    __tablename__ = "keyword_evaluations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    suggestion_id = Column(Integer, ForeignKey("keyword_suggestions.id", ondelete="SET NULL"), index=True)
+    keyword_id = Column(Integer, ForeignKey("keywords.id", ondelete="SET NULL"), index=True)
+    keyword_text = Column(String(255), nullable=False)
+    searchability_score = Column(Integer)
+    significance_score = Column(Integer)
+    specificity = Column(String(50))
+    decision = Column(String(20))  # approved, pending, merged, rejected
+    reasoning = Column(Text)
+    evaluation_metadata = Column(JSONBType(), default=dict)
+    created_at = Column(DateTime, default=func.now())
+
+    suggestion = relationship("KeywordSuggestion", back_populates="evaluations")
+    keyword = relationship("Keyword", back_populates="evaluations")
+
+
+class NewsSource(Base):
+    """Configurable news source metadata."""
+
+    __tablename__ = "news_sources"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), unique=True, nullable=False)
+    base_url = Column(String(512), nullable=False)
+    enabled = Column(Boolean, default=True)
+    language = Column(String(10), default="en")
+    country = Column(String(100), nullable=True)
+    priority = Column(Integer, default=0)
+    parser = Column(String(100), nullable=True)
+    tags = Column(ArrayType())
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    ingestion_records = relationship(
+        "SourceIngestionHistory",
+        back_populates="source",
+        cascade="all, delete-orphan",
+    )
+
+
+class KeywordSearchQueue(Base):
+    """Scheduled keyword search jobs awaiting processing."""
+
+    __tablename__ = "keyword_search_queue"
+
+    id = Column(Integer, primary_key=True, index=True)
+    keyword_id = Column(Integer, ForeignKey("keywords.id", ondelete="CASCADE"), nullable=False, index=True)
+    scheduled_at = Column(DateTime, nullable=False, index=True)
+    priority = Column(Integer, default=0, index=True)
+    attempts = Column(Integer, default=0)
+    max_attempts = Column(Integer, default=3)
+    status = Column(String(20), default="pending")  # pending, running, completed, failed, skipped
+    last_attempt_at = Column(DateTime, nullable=True)
+    error = Column(Text)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    keyword = relationship("Keyword", back_populates="queued_searches")
+
+
+class SourceIngestionHistory(Base):
+    """Track ingestion activity for each source."""
+
+    __tablename__ = "source_ingestion_history"
+
+    id = Column(Integer, primary_key=True)
+    source_id = Column(Integer, ForeignKey("news_sources.id", ondelete="CASCADE"), nullable=False)
+    last_run_at = Column(DateTime, default=func.now())
+    articles_ingested = Column(Integer, default=0)
+    success = Column(Boolean, default=True)
+    notes = Column(Text)
+
+    source = relationship("NewsSource", back_populates="ingestion_records")

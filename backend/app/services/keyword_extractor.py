@@ -8,19 +8,28 @@ Uses:
 """
 import json
 import logging
-import spacy
 from typing import List, Dict, Optional, Set
 from collections import Counter
+
+try:  # pragma: no cover - spaCy is optional during tests
+    import spacy
+except Exception:  # pragma: no cover
+    spacy = None  # type: ignore
+
 from app.services.gemini_client import get_gemini_client, retry_on_failure
 
 logger = logging.getLogger(__name__)
 
 # Load spaCy model (will be downloaded in Docker container)
-try:
-    nlp = spacy.load("en_core_web_sm")
-    logger.info("spaCy model loaded successfully")
-except OSError:
-    logger.warning("spaCy model not found. Run: python -m spacy download en_core_web_sm")
+if spacy is not None:
+    try:
+        nlp = spacy.load("en_core_web_sm")
+        logger.info("spaCy model loaded successfully")
+    except OSError:
+        logger.warning("spaCy model not found. Run: python -m spacy download en_core_web_sm")
+        nlp = None
+else:  # pragma: no cover - spaCy not installed
+    logger.warning("spaCy library unavailable; entity extraction disabled")
     nlp = None
 
 

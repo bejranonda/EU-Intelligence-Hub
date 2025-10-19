@@ -7,6 +7,9 @@ import { HomePage } from './pages/HomePage';
 import { KeywordDetailPage } from './pages/KeywordDetailPage';
 import { UploadPage } from './pages/UploadPage';
 import { SuggestPage } from './pages/SuggestPage';
+import { SearchPage } from './pages/SearchPage';
+import { AdminSuggestionsPage } from './pages/AdminSuggestionsPage';
+import { AdminSourcesPage } from './pages/AdminSourcesPage';
 
 // Create a React Query client
 const queryClient = new QueryClient({
@@ -28,6 +31,9 @@ function App() {
           <Route path="/keyword/:id" element={<KeywordDetailPage />} />
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/suggest" element={<SuggestPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/admin/suggestions" element={<AdminSuggestionsPage />} />
+          <Route path="/admin/sources" element={<AdminSourcesPage />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
