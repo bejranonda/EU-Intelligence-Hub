@@ -5,7 +5,19 @@
  */
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Determine API URL dynamically based on current location
+function getApiBaseUrl(): string {
+  // Use environment variable if explicitly set
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
+  // Use current host's origin but with port 8000 for backend
+  const host = window.location.hostname;
+  return `http://${host}:8000`;
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 class ApiClient {
   private client: AxiosInstance;
