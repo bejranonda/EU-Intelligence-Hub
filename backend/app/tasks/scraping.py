@@ -148,6 +148,11 @@ def scrape_news():
                     ingestion_records.setdefault(article_data.source_name, 0)
                     ingestion_records[article_data.source_name] += 1
 
+            except Exception as e:
+                logger.error(f"Failed to process article: {str(e)}")
+                db.rollback()
+                continue
+
         try:
             for source_name, count in ingestion_records.items():
                 source_record = db.query(NewsSource).filter_by(name=source_name).first()
@@ -164,11 +169,6 @@ def scrape_news():
             db.commit()
         except Exception as history_exc:
             logger.warning(f"Failed to record ingestion history: {history_exc}")
-
-            except Exception as e:
-                logger.error(f"Failed to process article: {str(e)}")
-                db.rollback()
-                continue
 
         logger.info(
             f"Scraping task completed: {processed_count} processed, "
