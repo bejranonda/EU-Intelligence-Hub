@@ -17,8 +17,8 @@ def test_database_connection(db_session: Session):
 def test_create_keyword(db_session: Session):
     """Test creating a keyword in the database."""
     keyword = Keyword(
-        name_en="Thailand",
-        name_th="ประเทศไทย",
+        keyword_en="Thailand",
+        keyword_th="ประเทศไทย",
         category="Country",
         popularity_score=100.0
     )
@@ -27,8 +27,8 @@ def test_create_keyword(db_session: Session):
     db_session.refresh(keyword)
 
     assert keyword.id is not None
-    assert keyword.name_en == "Thailand"
-    assert keyword.name_th == "ประเทศไทย"
+    assert keyword.keyword_en == "Thailand"
+    assert keyword.keyword_th == "ประเทศไทย"
     assert keyword.category == "Country"
     assert keyword.popularity_score == 100.0
 
@@ -40,7 +40,7 @@ def test_create_article(db_session: Session):
         summary="This is a test article",
         full_text="Full text of test article",
         source_url="https://example.com/test",
-        source_name="Test Source",
+        source="Test Source",
         classification="fact",
         sentiment_overall=0.75,
         sentiment_confidence=0.85,
@@ -91,7 +91,7 @@ def test_keyword_article_relationship(db_session: Session):
 
 def test_sentiment_trend_creation(db_session: Session):
     """Test creating sentiment trend record."""
-    keyword = Keyword(name_en="Thailand")
+    keyword = Keyword(keyword_en="Thailand")
     db_session.add(keyword)
     db_session.commit()
 
@@ -119,9 +119,9 @@ def test_sentiment_trend_creation(db_session: Session):
 def test_keyword_suggestion_creation(db_session: Session):
     """Test creating keyword suggestion."""
     suggestion = KeywordSuggestion(
-        keyword="Vietnam",
-        suggested_by_ip="192.168.1.1",
-        vote_count=5,
+        keyword_en="Vietnam",
+        reason="Suggested for geopolitical tracking",
+        contact_email="user@example.com",
         status="pending"
     )
     db_session.add(suggestion)
@@ -129,5 +129,5 @@ def test_keyword_suggestion_creation(db_session: Session):
     db_session.refresh(suggestion)
 
     assert suggestion.id is not None
-    assert suggestion.keyword == "Vietnam"
+    assert suggestion.keyword_en == "Vietnam"
     assert suggestion.status == "pending"
