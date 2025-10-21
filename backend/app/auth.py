@@ -15,13 +15,13 @@ security = HTTPBasic()
 def verify_admin_credentials(credentials: HTTPBasicCredentials = Depends(security)):
     """
     Verify admin credentials using HTTP Basic Authentication.
-    
+
     Args:
         credentials: HTTP Basic Auth credentials
-        
+
     Returns:
         dict: Admin credentials if valid
-        
+
     Raises:
         HTTPException: If credentials are invalid
     """
@@ -29,9 +29,13 @@ def verify_admin_credentials(credentials: HTTPBasicCredentials = Depends(securit
         # Check if username and password match configured values
         correct_username = getattr(settings, 'admin_username', 'admin')
         correct_password = getattr(settings, 'admin_password', 'password')
-        
-        if (credentials.username == correct_username and 
+
+        logger.info(f"Auth attempt: username={credentials.username} (expected: {correct_username}), "
+                   f"password_match={credentials.password == correct_password}")
+
+        if (credentials.username == correct_username and
             credentials.password == correct_password):
+            logger.info(f"Admin authentication successful for: {credentials.username}")
             return credentials
         else:
             # Log failed authentication attempt
@@ -41,8 +45,10 @@ def verify_admin_credentials(credentials: HTTPBasicCredentials = Depends(securit
                 detail="Invalid admin credentials",
                 headers={"WWW-Authenticate": "Basic"},
             )
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Authentication error: {e}")
+        logger.error(f"Authentication error: {type(e).__name__}: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="Authentication error"

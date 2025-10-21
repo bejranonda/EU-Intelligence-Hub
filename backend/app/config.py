@@ -32,8 +32,8 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
 
     # Admin
-    admin_username: str = "admin"
-    admin_password: str = "admin"
+    admin_username: str = Field(default="admin", validation_alias="ADMIN_USERNAME")
+    admin_password: str = Field(default="admin", validation_alias="ADMIN_PASSWORD")
 
     # Application
     secret_key: str = "change_me"

@@ -64,8 +64,12 @@ Submit keywords in English only—AI automatically translates to Thai (and other
 Gemini evaluates suggestions for significance, auto-merges duplicates, and recommends alternatives for difficult keywords
 > *> AI decides which keywords are worth tracking and handles duplicates automatically—like having a smart assistant*
 
+📰 **12 European News Sources** ✨ NEW
+Configurable sources from BBC, Reuters, Deutsche Welle, France24, Euronews, Guardian, and more—enable/disable and manage via admin panel
+> *> Control exactly which European outlets you track—add custom sources or disable ones you don't need*
+
 🌐 **Production-Ready Architecture**
-Docker Compose orchestration, Nginx reverse proxy, PostgreSQL with pgvector, Redis caching, SSL support
+Docker Compose orchestration, Nginx reverse proxy, PostgreSQL with pgvector, Redis caching, SSL support, Prometheus + Grafana monitoring
 > *> Built with professional enterprise tools—secure, fast, and scalable like systems used by major companies*
 
 ---
@@ -289,38 +293,60 @@ CREATE TABLE sentiment_trends (
 
 ## 📡 API Endpoints
 
-### Core Resources
+### Keyword Management (7 endpoints)
 ```http
-GET    /api/keywords                      # Search keywords (paginated, filtered)
-GET    /api/keywords/{id}                 # Detailed keyword info
-GET    /api/keywords/{id}/articles        # Related articles (sorted by date/sentiment)
-GET    /api/keywords/{id}/relations       # Mind map relationship data
-POST   /api/documents                     # Upload PDF/DOCX/TXT for analysis
-POST   /api/suggestions                   # Suggest new keyword for tracking
+GET    /api/keywords/                         # Search with pagination & filters
+GET    /api/keywords/{id}                     # Detailed keyword info
+GET    /api/keywords/{id}/articles            # Related articles (sorted)
+GET    /api/keywords/{id}/relations           # Mind map relationship data
+POST   /api/suggestions/                      # Submit keyword suggestion
+GET    /api/suggestions/                      # List all suggestions
+POST   /api/suggestions/{id}/vote             # Upvote suggestion
 ```
 
-### Sentiment Intelligence
+### Sentiment Analysis (4 endpoints)
 ```http
-GET    /api/sentiment/keywords/{id}/sentiment          # Overall statistics
-GET    /api/sentiment/keywords/{id}/sentiment/timeline # Time-series data (7/30/90 days)
-GET    /api/sentiment/keywords/compare                 # Multi-keyword comparison
-GET    /api/sentiment/articles/{id}/sentiment          # Detailed article analysis
+GET    /api/sentiment/keywords/{id}/sentiment           # Overall stats
+GET    /api/sentiment/keywords/{id}/sentiment/timeline  # Time-series (7/30/90 days)
+GET    /api/sentiment/keywords/compare                  # Multi-keyword comparison
+GET    /api/sentiment/articles/{id}/sentiment           # Article-level analysis
 ```
 
-### Semantic Search
+### Semantic Search (3 endpoints)
 ```http
-GET    /api/search/semantic?q=tourism+recovery    # Vector similarity search
-GET    /api/search/similar/{article_id}           # Find related articles
+GET    /api/search/articles                   # Full-text search
+GET    /api/search/semantic                   # Vector similarity search
+GET    /api/search/similar/{article_id}       # Find similar articles
 ```
 
-### Admin & Keyword Management ✨ NEW
+### Document Processing (1 endpoint)
 ```http
-POST   /api/admin/keywords/suggestions/{id}/process      # AI-powered evaluation
-POST   /api/admin/keywords/suggestions/{id}/approve      # Manual approval + auto-translate + search
-POST   /api/admin/keywords/suggestions/{id}/reject       # Reject suggestion
-GET    /api/admin/keywords/suggestions/pending           # View pending suggestions
-GET    /api/admin/keywords/suggestions/stats             # Statistics dashboard
+POST   /api/documents/upload                  # Upload PDF/DOCX/TXT for analysis
 ```
+
+### Admin - Source Management (4 endpoints) ✨ NEW
+```http
+GET    /admin/sources                         # List all 12 news sources
+POST   /admin/sources                         # Add new source
+POST   /admin/sources/{id}/toggle             # Enable/disable source
+GET    /admin/sources/{id}/ingestion          # View ingestion history
+```
+
+### Admin - Keyword Approval (5 endpoints) ✨ NEW
+```http
+POST   /admin/keywords/suggestions/{id}/process    # AI evaluation
+POST   /admin/keywords/suggestions/{id}/approve    # Approve + auto-translate + search
+POST   /admin/keywords/suggestions/{id}/reject     # Reject suggestion
+GET    /admin/keywords/suggestions/pending         # View pending suggestions
+GET    /admin/keywords/suggestions/stats           # Dashboard statistics
+```
+
+### Admin - Evaluation History (1 endpoint) ✨ NEW
+```http
+GET    /admin/suggestions/{id}/evaluations    # View AI evaluation history
+```
+
+**Total**: 30+ API endpoints across 8 routers
 
 **Interactive Docs**: Start the backend and visit [http://localhost:8000/docs](http://localhost:8000/docs) for full Swagger UI.
 
@@ -456,11 +482,17 @@ watch -n 5 'docker compose ps'
 
 | Task | Schedule | Purpose |
 |------|----------|---------|
-| **News Scraping** | Every hour | Collect latest articles from 12 European sources |
-| **Sentiment Aggregation** | Daily 00:30 UTC | Compute trend statistics for fast queries |
-| **Keyword Processing** ✨ NEW | Daily 02:00 UTC | AI evaluates pending suggestions, auto-approves/merges |
-| **Performance Review** ✨ NEW | Monday 03:00 UTC | Identifies inactive keywords, suggests optimizations |
-| **Immediate Search** ✨ NEW | On-demand | Triggered when keywords approved (3-hour cooldown) |
+| **News Scraping** | Hourly | Collect latest articles from 12 European sources via Gemini research |
+| **Sentiment Aggregation** | Daily 00:30 UTC | Pre-compute trend statistics for fast timeline queries (5ms vs 850ms) |
+| **Keyword Suggestion Processing** ✨ NEW | Daily 02:00 UTC | Batch AI evaluation of pending suggestions with auto-approval |
+| **Keyword Performance Review** ✨ NEW | Monday 03:00 UTC | Identifies inactive keywords (>30 days), flags for removal |
+| **Keyword Queue Population** ✨ NEW | Every 30 min | Schedule searches for keywords (3-hour cooldown enforcement) |
+| **Keyword Queue Processing** ✨ NEW | Every 15 min | Execute scheduled searches from queue |
+| **Database Backup** | Daily 01:00 UTC | Automated pg_dump with compression + integrity verification |
+| **Backup Cleanup** | Daily 04:00 UTC | Remove old backups (7-day retention) |
+| **Database Health Check** | Hourly | Monitor connections, disk space, index health, query performance |
+
+**Total**: 9 automated Celery tasks
 
 *Celery configuration in [backend/app/tasks/](backend/app/tasks/)*
 
@@ -593,13 +625,15 @@ This project is designed for developers to pause and resume work across sessions
 | **Total Lines of Code** | ~7,300+ |
 | **Backend (Python)** | ~5,100 lines |
 | **Frontend (TypeScript/React)** | ~1,800 lines |
-| **Test Coverage** | >80% |
-| **API Endpoints** | 20+ |
-| **Database Tables** | 8 |
-| **Docker Services** | 6 |
-| **Supported News Sources** | 12 European outlets ✨ |
+| **Test Coverage** | >80% (49 tests) |
+| **API Endpoints** | 30+ across 8 routers ✨ |
+| **Database Tables** | 12 with pgvector ✨ |
+| **Docker Services** | 11 orchestrated containers ✨ |
+| **Supported News Sources** | 12 European outlets (configurable) |
 | **AI Models Integrated** | 4 (Gemini, VADER, spaCy, Sentence Transformers) |
-| **Celery Scheduled Tasks** | 4 automated jobs ✨ |
+| **Celery Scheduled Tasks** | 9 automated background jobs ✨ |
+| **Languages Supported** | 9 (EN, TH, DE, FR, ES, IT, PL, SV, NL) ✨ |
+| **Vector Embedding Dimensions** | 384 (Sentence Transformers) |
 
 ---
 
@@ -628,10 +662,12 @@ Free for personal and commercial use with attribution.
 ### 📚 Documentation
 
 - **[README.md](README.md)** - This file, project overview and quick start
+- **[WEBPAGES_GUIDE.md](WEBPAGES_GUIDE.md)** ✨ NEW - Complete URL reference for all pages (frontend, admin, monitoring)
+- **[FEATURES.md](FEATURES.md)** ✨ NEW - Complete feature inventory (30+ API endpoints, 9 Celery tasks, 12 DB tables)
 - **[INSTALLATION.md](INSTALLATION.md)** - Detailed installation guide
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - Production deployment guide
-- **[FEATURE_UPDATES.md](FEATURE_UPDATES.md)** ✨ NEW - Immediate search & auto-translation features
-- **[ERROR_LOGGING.md](ERROR_LOGGING.md)** ✨ NEW - Error logging and monitoring guide
+- **[FEATURE_UPDATES.md](FEATURE_UPDATES.md)** - Immediate search & auto-translation features
+- **[ERROR_LOGGING.md](ERROR_LOGGING.md)** - Error logging and monitoring guide
 - **[KEYWORD_WORKFLOW.md](KEYWORD_WORKFLOW.md)** - AI-powered keyword management workflow
 - **[PROGRESS.md](PROGRESS.md)** - Development progress and technical achievements
 - **[SECURITY.md](SECURITY.md)** - Security best practices and checklist
