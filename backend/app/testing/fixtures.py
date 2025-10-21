@@ -6,7 +6,7 @@ import os
 from typing import Generator
 
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -20,15 +20,32 @@ def engine():
 
     if database_url.startswith("sqlite"):
         connect_args = {"check_same_thread": False}
-        pool_args = {"poolclass": StaticPool} if database_url.endswith(":memory:") else {}
+        pool_args = (
+            {"poolclass": StaticPool} if database_url.endswith(":memory:") else {}
+        )
         engine = create_engine(database_url, connect_args=connect_args, **pool_args)
     else:
         engine = create_engine(database_url)
+
+    # Drop views first if using PostgreSQL (they depend on tables)
+    if not database_url.startswith("sqlite"):
+        with engine.connect() as conn:
+            conn.execute(
+                text("DROP VIEW IF EXISTS keyword_sentiment_summary CASCADE;")
+            )
+            conn.commit()
 
     Base.metadata.create_all(bind=engine)
     try:
         yield engine
     finally:
+        # Drop views before dropping tables
+        if not database_url.startswith("sqlite"):
+            with engine.connect() as conn:
+                conn.execute(
+                    text("DROP VIEW IF EXISTS keyword_sentiment_summary CASCADE;")
+                )
+                conn.commit()
         Base.metadata.drop_all(bind=engine)
         engine.dispose()
 
