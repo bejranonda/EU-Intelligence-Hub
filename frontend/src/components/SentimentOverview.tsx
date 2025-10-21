@@ -6,8 +6,6 @@ import { SentimentData } from '../types';
 import {
   formatSentiment,
   getSentimentColor,
-  getSentimentBgColor,
-  getSentimentLabel,
 } from '../lib/utils';
 import { TrendingUp, TrendingDown, FileText } from 'lucide-react';
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { Search as SearchIcon } from 'lucide-react';
@@ -53,9 +53,9 @@ export function SearchPage() {
     sortBy: 'relevance' as SortOption,
   });
 
-  const { data, isLoading, isFetching } = useQuery(
-    ['article-search', query, page, filters],
-    () =>
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: ['article-search', query, page, filters],
+    queryFn: () =>
       apiClient.semanticSearch({
         q: query || 'europe',
         page,
@@ -64,8 +64,7 @@ export function SearchPage() {
         language: filters.language || undefined,
         sort_by: filters.sortBy,
       }),
-    { keepPreviousData: true }
-  );
+  });
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();

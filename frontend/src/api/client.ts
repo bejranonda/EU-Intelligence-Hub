@@ -143,6 +143,21 @@ class ApiClient {
 
   // Search API
 
+  async semanticSearch(params: {
+    q: string;
+    page?: number;
+    page_size?: number;
+    min_similarity?: number;
+    source?: string;
+    language?: string;
+    sort_by?: string;
+  }) {
+    const response = await this.client.get('/api/search/semantic', {
+      params,
+    });
+    return response.data;
+  }
+
   async findSimilarArticles(
     articleId: number,
     params: {

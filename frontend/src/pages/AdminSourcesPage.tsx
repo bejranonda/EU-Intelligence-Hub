@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchJSON, postJSON } from '../api/client';
 
@@ -25,12 +25,12 @@ type IngestionEntry = {
 };
 
 async function loadSources(): Promise<NewsSource[]> {
-  const payload = await fetchJSON('/admin/sources');
+  const payload = await fetchJSON('/admin/sources') as { sources?: NewsSource[] };
   return payload.sources ?? [];
 }
 
 async function loadIngestionHistory(sourceId: number): Promise<IngestionEntry[]> {
-  const payload = await fetchJSON(`/admin/sources/${sourceId}/ingestion?limit=20`);
+  const payload = await fetchJSON(`/admin/sources/${sourceId}/ingestion?limit=20`) as { history?: IngestionEntry[] };
   return payload.history ?? [];
 }
 
@@ -52,11 +52,6 @@ export function AdminSourcesPage() {
     queryKey: ['admin-sources'],
     queryFn: loadSources,
   });
-
-  const activeSource = useMemo(
-    () => sources.find((source) => source.id === activeSourceId) ?? null,
-    [sources, activeSourceId],
-  );
 
   const { data: history = [], isLoading: historyLoading } = useQuery({
     queryKey: ['admin-source-history', activeSourceId],
