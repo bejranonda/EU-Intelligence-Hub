@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "created": "2025-10-21T00:00:00Z",
+    "last_updated": "2025-10-21T00:00:00Z",
+    "total_tasks_completed": 0,
+    "average_completion_time_seconds": 0
+  },
+  "pending_tasks": [],
+  "completed_tasks": [],
+  "failed_tasks": []
+}
