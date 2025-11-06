@@ -11,26 +11,26 @@ class JsonFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         log_data = {
-            'timestamp': datetime.utcnow().isoformat(),
-            'level': record.levelname,
-            'logger': record.name,
-            'message': record.getMessage(),
-            'module': record.module,
-            'function': record.funcName,
-            'line': record.lineno,
+            "timestamp": datetime.utcnow().isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+            "line": record.lineno,
         }
 
         if record.exc_info:
-            log_data['exception'] = self.formatException(record.exc_info)
+            log_data["exception"] = self.formatException(record.exc_info)
 
-        if hasattr(record, 'request_id'):
-            log_data['request_id'] = record.request_id
+        if hasattr(record, "request_id"):
+            log_data["request_id"] = record.request_id
 
-        if hasattr(record, 'user_id'):
-            log_data['user_id'] = record.user_id
+        if hasattr(record, "user_id"):
+            log_data["user_id"] = record.user_id
 
-        if hasattr(record, 'duration_ms'):
-            log_data['duration_ms'] = record.duration_ms
+        if hasattr(record, "duration_ms"):
+            log_data["duration_ms"] = record.duration_ms
 
         return json.dumps(log_data)
 
@@ -42,9 +42,9 @@ class ContextualFilter(logging.Filter):
         return True
 
 
-def setup_logging(environment: str = 'development', level: str = 'INFO') -> None:
+def setup_logging(environment: str = "development", level: str = "INFO") -> None:
     """Configure logging for the application.
-    
+
     Args:
         environment: Application environment (development, staging, production)
         level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
@@ -63,14 +63,14 @@ def setup_logging(environment: str = 'development', level: str = 'INFO') -> None
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(log_level)
 
-    if environment == 'production':
+    if environment == "production":
         # Use JSON formatting in production
         formatter = JsonFormatter()
     else:
         # Use readable format in development
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
 
     console_handler.setFormatter(formatter)
@@ -80,18 +80,18 @@ def setup_logging(environment: str = 'development', level: str = 'INFO') -> None
     root_logger.addFilter(ContextualFilter())
 
     # Set specific logger levels for noisy libraries
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
-    logging.getLogger('sqlalchemy.pool').setLevel(logging.WARNING)
-    logging.getLogger('urllib3').setLevel(logging.WARNING)
-    logging.getLogger('alembic').setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("alembic").setLevel(logging.WARNING)
 
     # Application loggers
     for logger_name in (
-        'app',
-        'app.api',
-        'app.services',
-        'app.tasks',
-        'app.monitoring',
+        "app",
+        "app.api",
+        "app.services",
+        "app.tasks",
+        "app.monitoring",
     ):
         logging.getLogger(logger_name).setLevel(log_level)
 

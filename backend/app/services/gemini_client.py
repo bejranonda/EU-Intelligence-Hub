@@ -3,10 +3,12 @@ import time
 import logging
 from typing import Optional, Dict, Any
 from functools import wraps
+
 # Optional import so local tests can run without the Google SDK.
 try:  # pragma: no cover - simple import guard
     import google.generativeai as genai
 except Exception:  # pragma: no cover
+
     class _DummyGenAI:  # type: ignore
         class GenerativeModel:
             def __init__(self, *_, **__):
@@ -25,12 +27,14 @@ except Exception:  # pragma: no cover
 try:  # pragma: no cover - simple guard
     from app.config import get_settings
 except Exception:  # pragma: no cover
+
     def get_settings():  # type: ignore
         class _Dummy:
             gemini_api_key = ""
             gemini_rate_limit_per_minute = 30
 
         return _Dummy()
+
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -58,7 +62,9 @@ class RateLimiter:
         if len(self.calls) >= self.max_calls:
             wait_time = 60 - (now - self.calls[0])
             if wait_time > 0:
-                logger.warning(f"Rate limit reached. Waiting {wait_time:.2f} seconds...")
+                logger.warning(
+                    f"Rate limit reached. Waiting {wait_time:.2f} seconds..."
+                )
                 time.sleep(wait_time)
                 self.calls = []
 
@@ -76,7 +82,7 @@ class GeminiClient:
             return
 
         try:
-            self.model = genai.GenerativeModel('gemini-pro')
+            self.model = genai.GenerativeModel("gemini-pro")
             self.rate_limiter = RateLimiter(
                 max_calls_per_minute=settings.gemini_rate_limit_per_minute
             )
@@ -105,10 +111,10 @@ class GeminiClient:
             response = self.model.generate_content(
                 prompt,
                 generation_config=genai.types.GenerationConfig(
-                    temperature=kwargs.get('temperature', 0.7),
-                    top_p=kwargs.get('top_p', 0.95),
-                    top_k=kwargs.get('top_k', 40),
-                    max_output_tokens=kwargs.get('max_output_tokens', 2048),
+                    temperature=kwargs.get("temperature", 0.7),
+                    top_p=kwargs.get("top_p", 0.95),
+                    top_k=kwargs.get("top_k", 40),
+                    max_output_tokens=kwargs.get("max_output_tokens", 2048),
                 ),
             )
 
@@ -123,10 +129,7 @@ class GeminiClient:
             return None
 
     def generate_text(
-        self,
-        prompt: str,
-        temperature: float = 0.7,
-        max_tokens: int = 2048
+        self, prompt: str, temperature: float = 0.7, max_tokens: int = 2048
     ) -> Optional[str]:
         """
         Generate text using Gemini.
@@ -140,15 +143,11 @@ class GeminiClient:
             Generated text or None
         """
         return self._make_request(
-            prompt,
-            temperature=temperature,
-            max_output_tokens=max_tokens
+            prompt, temperature=temperature, max_output_tokens=max_tokens
         )
 
     def generate_structured_output(
-        self,
-        prompt: str,
-        temperature: float = 0.3
+        self, prompt: str, temperature: float = 0.3
     ) -> Optional[str]:
         """
         Generate structured output (JSON) using Gemini.
@@ -163,15 +162,11 @@ class GeminiClient:
             Generated JSON string or None
         """
         return self._make_request(
-            prompt,
-            temperature=temperature,
-            max_output_tokens=2048
+            prompt, temperature=temperature, max_output_tokens=2048
         )
 
     async def generate_json(
-        self,
-        prompt: str,
-        temperature: float = 0.3
+        self, prompt: str, temperature: float = 0.3
     ) -> Optional[Dict[str, Any]]:
         """
         Generate and parse JSON output using Gemini.
@@ -186,9 +181,7 @@ class GeminiClient:
         import json
 
         response = self._make_request(
-            prompt,
-            temperature=temperature,
-            max_output_tokens=2048
+            prompt, temperature=temperature, max_output_tokens=2048
         )
 
         if not response:
@@ -234,6 +227,7 @@ def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
         max_retries: Maximum number of retry attempts
         delay: Delay between retries in seconds
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -252,5 +246,7 @@ def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
                     else:
                         logger.error(f"All {max_retries} attempts failed")
             raise last_exception
+
         return wrapper
+
     return decorator

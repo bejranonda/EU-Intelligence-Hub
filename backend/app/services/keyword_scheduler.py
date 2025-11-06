@@ -30,7 +30,9 @@ def calculate_next_run(base: datetime, cooldown_minutes: int) -> datetime:
     return base + timedelta(minutes=cooldown_minutes)
 
 
-def load_eligible_keywords(db: Session, limit: Optional[int] = None) -> List[SchedulingCandidate]:
+def load_eligible_keywords(
+    db: Session, limit: Optional[int] = None
+) -> List[SchedulingCandidate]:
     """Return keywords eligible for scheduling based on cooldown and priority."""
 
     now = datetime.utcnow()
@@ -44,7 +46,10 @@ def load_eligible_keywords(db: Session, limit: Optional[int] = None) -> List[Sch
                 func.coalesce(Keyword.next_search_after, datetime(1970, 1, 1)) <= now,
             )
         )
-        .order_by(Keyword.search_priority.desc(), func.coalesce(Keyword.last_searched, datetime(1970, 1, 1)))
+        .order_by(
+            Keyword.search_priority.desc(),
+            func.coalesce(Keyword.last_searched, datetime(1970, 1, 1)),
+        )
     )
 
     if limit:
@@ -144,7 +149,9 @@ def mark_keyword_searched(db: Session, keyword: Keyword) -> None:
 
     now = datetime.utcnow()
     keyword.last_searched = now
-    keyword.next_search_after = calculate_next_run(now, settings.keyword_search_cooldown_minutes)
+    keyword.next_search_after = calculate_next_run(
+        now, settings.keyword_search_cooldown_minutes
+    )
     keyword.search_count = (keyword.search_count or 0) + 1
     db.add(keyword)
 
@@ -154,7 +161,10 @@ def dequeue_jobs(db: Session, limit: int) -> List[KeywordSearchQueue]:
 
     jobs = (
         db.query(KeywordSearchQueue)
-        .filter(KeywordSearchQueue.status == "pending", KeywordSearchQueue.scheduled_at <= datetime.utcnow())
+        .filter(
+            KeywordSearchQueue.status == "pending",
+            KeywordSearchQueue.scheduled_at <= datetime.utcnow(),
+        )
         .order_by(KeywordSearchQueue.priority.desc(), KeywordSearchQueue.scheduled_at)
         .limit(limit)
         .with_for_update(skip_locked=True)
@@ -173,7 +183,9 @@ def dequeue_jobs(db: Session, limit: int) -> List[KeywordSearchQueue]:
     return jobs
 
 
-def complete_job(db: Session, job: KeywordSearchQueue, *, success: bool, error: Optional[str] = None) -> None:
+def complete_job(
+    db: Session, job: KeywordSearchQueue, *, success: bool, error: Optional[str] = None
+) -> None:
     """Finalize a job after execution."""
 
     now = datetime.utcnow()
@@ -183,10 +195,14 @@ def complete_job(db: Session, job: KeywordSearchQueue, *, success: bool, error: 
         job.status = "completed"
         job.error = None
     else:
-        job.status = "failed" if (job.attempts or 0) >= (job.max_attempts or 3) else "pending"
+        job.status = (
+            "failed" if (job.attempts or 0) >= (job.max_attempts or 3) else "pending"
+        )
         job.error = error
         if job.status == "pending":
-            job.scheduled_at = calculate_next_run(now, settings.keyword_scheduler_retry_minutes)
+            job.scheduled_at = calculate_next_run(
+                now, settings.keyword_scheduler_retry_minutes
+            )
 
     db.add(job)
     db.commit()

@@ -16,7 +16,9 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     # Database
-    database_url: str = Field(default="sqlite:///./app.db", validation_alias="DATABASE_URL")
+    database_url: str = Field(
+        default="sqlite:///./app.db", validation_alias="DATABASE_URL"
+    )
     postgres_user: str = ""
     postgres_password: str = ""
     postgres_db: str = ""

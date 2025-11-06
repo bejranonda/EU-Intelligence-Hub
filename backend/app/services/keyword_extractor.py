@@ -26,7 +26,9 @@ if spacy is not None:
         nlp = spacy.load("en_core_web_sm")
         logger.info("spaCy model loaded successfully")
     except OSError:
-        logger.warning("spaCy model not found. Run: python -m spacy download en_core_web_sm")
+        logger.warning(
+            "spaCy model not found. Run: python -m spacy download en_core_web_sm"
+        )
         nlp = None
 else:  # pragma: no cover - spaCy not installed
     logger.warning("spaCy library unavailable; entity extraction disabled")
@@ -42,8 +44,18 @@ class KeywordExtractor:
 
         # Common stopwords to filter out
         self.stopwords = {
-            'thailand', 'country', 'government', 'people', 'years', 'year',
-            'said', 'says', 'according', 'report', 'reports', 'news'
+            "thailand",
+            "country",
+            "government",
+            "people",
+            "years",
+            "year",
+            "said",
+            "says",
+            "according",
+            "report",
+            "reports",
+            "news",
         }
 
     def extract_entities_spacy(self, text: str) -> Dict[str, List[str]]:
@@ -58,17 +70,12 @@ class KeywordExtractor:
         """
         if not self.nlp:
             logger.error("spaCy model not loaded")
-            return {'people': [], 'organizations': [], 'locations': [], 'other': []}
+            return {"people": [], "organizations": [], "locations": [], "other": []}
 
         try:
             doc = self.nlp(text[:100000])  # Limit text length for performance
 
-            entities = {
-                'people': [],
-                'organizations': [],
-                'locations': [],
-                'other': []
-            }
+            entities = {"people": [], "organizations": [], "locations": [], "other": []}
 
             for ent in doc.ents:
                 text_lower = ent.text.lower().strip()
@@ -77,14 +84,14 @@ class KeywordExtractor:
                 if text_lower in self.stopwords or len(text_lower) < 3:
                     continue
 
-                if ent.label_ == 'PERSON':
-                    entities['people'].append(ent.text)
-                elif ent.label_ in ['ORG', 'NORP']:
-                    entities['organizations'].append(ent.text)
-                elif ent.label_ in ['GPE', 'LOC']:
-                    entities['locations'].append(ent.text)
+                if ent.label_ == "PERSON":
+                    entities["people"].append(ent.text)
+                elif ent.label_ in ["ORG", "NORP"]:
+                    entities["organizations"].append(ent.text)
+                elif ent.label_ in ["GPE", "LOC"]:
+                    entities["locations"].append(ent.text)
                 else:
-                    entities['other'].append(ent.text)
+                    entities["other"].append(ent.text)
 
             # Remove duplicates while preserving order
             for key in entities:
@@ -100,7 +107,7 @@ class KeywordExtractor:
 
         except Exception as e:
             logger.error(f"spaCy entity extraction failed: {str(e)}")
-            return {'people': [], 'organizations': [], 'locations': [], 'other': []}
+            return {"people": [], "organizations": [], "locations": [], "other": []}
 
     def extract_noun_chunks(self, text: str) -> List[str]:
         """
@@ -123,9 +130,11 @@ class KeywordExtractor:
                 chunk_text = chunk.text.lower().strip()
 
                 # Filter criteria
-                if (len(chunk_text.split()) <= 4 and  # Not too long
-                    len(chunk_text) >= 5 and  # Not too short
-                    chunk_text not in self.stopwords):
+                if (
+                    len(chunk_text.split()) <= 4
+                    and len(chunk_text) >= 5  # Not too long
+                    and chunk_text not in self.stopwords  # Not too short
+                ):
                     chunks.append(chunk.text)
 
             # Count frequency and return top ones
@@ -199,11 +208,11 @@ Return ONLY the JSON, no additional text."""
 
             # Clean response
             clean_response = response.strip()
-            if clean_response.startswith('```json'):
+            if clean_response.startswith("```json"):
                 clean_response = clean_response[7:]
-            if clean_response.startswith('```'):
+            if clean_response.startswith("```"):
                 clean_response = clean_response[3:]
-            if clean_response.endswith('```'):
+            if clean_response.endswith("```"):
                 clean_response = clean_response[:-3]
             clean_response = clean_response.strip()
 
@@ -276,11 +285,11 @@ Return ONLY the JSON, no additional text."""
 
             # Clean response
             clean_response = response.strip()
-            if clean_response.startswith('```json'):
+            if clean_response.startswith("```json"):
                 clean_response = clean_response[7:]
-            if clean_response.startswith('```'):
+            if clean_response.startswith("```"):
                 clean_response = clean_response[3:]
-            if clean_response.endswith('```'):
+            if clean_response.endswith("```"):
                 clean_response = clean_response[:-3]
             clean_response = clean_response.strip()
 
@@ -306,17 +315,17 @@ Return ONLY the JSON, no additional text."""
             Complete extraction results
         """
         results = {
-            'keywords': [],
-            'entities': {'people': [], 'organizations': [], 'locations': []},
-            'relationships': [],
-            'classification': 'mixed',
-            'classification_confidence': 0.5,
-            'method': 'hybrid'
+            "keywords": [],
+            "entities": {"people": [], "organizations": [], "locations": []},
+            "relationships": [],
+            "classification": "mixed",
+            "classification_confidence": 0.5,
+            "method": "hybrid",
         }
 
         # Get spaCy entities
         spacy_entities = self.extract_entities_spacy(text)
-        results['entities'] = spacy_entities
+        results["entities"] = spacy_entities
 
         # Get noun chunks as backup keywords
         noun_chunks = self.extract_noun_chunks(text)
@@ -327,25 +336,29 @@ Return ONLY the JSON, no additional text."""
             classification = self.classify_fact_opinion(title, text)
 
             if gemini_keywords:
-                results['keywords'] = gemini_keywords.get('keywords', [])
-                results['relationships'] = gemini_keywords.get('relationships', [])
+                results["keywords"] = gemini_keywords.get("keywords", [])
+                results["relationships"] = gemini_keywords.get("relationships", [])
 
                 # Merge entities (Gemini may find additional ones)
-                gemini_entities = gemini_keywords.get('entities', {})
-                for key in ['people', 'organizations', 'locations']:
-                    existing = set(results['entities'].get(key, []))
+                gemini_entities = gemini_keywords.get("entities", {})
+                for key in ["people", "organizations", "locations"]:
+                    existing = set(results["entities"].get(key, []))
                     additional = gemini_entities.get(key, [])
-                    results['entities'][key] = list(existing.union(additional))[:10]
+                    results["entities"][key] = list(existing.union(additional))[:10]
 
             if classification:
-                results['classification'] = classification.get('classification', 'mixed')
-                results['classification_confidence'] = classification.get('confidence', 0.5)
-                results['classification_reasoning'] = classification.get('reasoning')
+                results["classification"] = classification.get(
+                    "classification", "mixed"
+                )
+                results["classification_confidence"] = classification.get(
+                    "confidence", 0.5
+                )
+                results["classification_reasoning"] = classification.get("reasoning")
 
         # Fallback to noun chunks if no keywords extracted
-        if not results['keywords']:
-            results['keywords'] = noun_chunks[:5]
-            results['method'] = 'spacy_only'
+        if not results["keywords"]:
+            results["keywords"] = noun_chunks[:5]
+            results["method"] = "spacy_only"
 
         return results
 

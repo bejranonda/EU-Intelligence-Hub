@@ -15,7 +15,7 @@ class RateLimiter:
     def __init__(self, max_requests: int = 60, window_seconds: int = 60):
         """
         Initialize rate limiter.
-        
+
         Args:
             max_requests: Maximum number of requests allowed
             window_seconds: Time window in seconds
@@ -27,13 +27,14 @@ class RateLimiter:
     def is_allowed(self, client_id: str) -> bool:
         """Check if client is allowed to make a request."""
         now = time.time()
-        
+
         if client_id not in self.requests:
             self.requests[client_id] = []
 
         # Remove old requests outside the window
         self.requests[client_id] = [
-            req_time for req_time in self.requests[client_id]
+            req_time
+            for req_time in self.requests[client_id]
             if now - req_time < self.window_seconds
         ]
 
@@ -46,13 +47,14 @@ class RateLimiter:
     def get_remaining(self, client_id: str) -> int:
         """Get remaining requests for client."""
         now = time.time()
-        
+
         if client_id not in self.requests:
             return self.max_requests
 
         # Remove old requests
         self.requests[client_id] = [
-            req_time for req_time in self.requests[client_id]
+            req_time
+            for req_time in self.requests[client_id]
             if now - req_time < self.window_seconds
         ]
 
@@ -69,7 +71,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable):
         """Process request with rate limiting."""
         client_ip = request.client.host if request.client else "unknown"
-        
+
         # Skip rate limiting for health checks
         if request.url.path in ["/health", "/api/health", "/metrics"]:
             return await call_next(request)
@@ -77,26 +79,28 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if not self.rate_limiter.is_allowed(client_ip):
             remaining = self.rate_limiter.get_remaining(client_ip)
             logger.warning(f"Rate limit exceeded for client {client_ip}")
-            
+
             return JSONResponse(
                 status_code=429,
                 content={
                     "detail": "Too many requests",
-                    "retry_after": self.rate_limiter.window_seconds
+                    "retry_after": self.rate_limiter.window_seconds,
                 },
                 headers={
                     "Retry-After": str(self.rate_limiter.window_seconds),
                     "X-RateLimit-Limit": str(self.rate_limiter.max_requests),
                     "X-RateLimit-Remaining": str(remaining),
-                }
+                },
             )
 
         response = await call_next(request)
-        
+
         # Add rate limit headers
         remaining = self.rate_limiter.get_remaining(client_ip)
         response.headers["X-RateLimit-Limit"] = str(self.rate_limiter.max_requests)
         response.headers["X-RateLimit-Remaining"] = str(remaining)
-        response.headers["X-RateLimit-Reset"] = str(int(time.time()) + self.rate_limiter.window_seconds)
-        
+        response.headers["X-RateLimit-Reset"] = str(
+            int(time.time()) + self.rate_limiter.window_seconds
+        )
+
         return response

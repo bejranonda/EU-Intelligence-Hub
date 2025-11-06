@@ -25,15 +25,19 @@ def _create_engine() -> Engine:
         connect_args["check_same_thread"] = False
         pool_kwargs.update({"pool_size": None, "max_overflow": 0})
     else:
-        pool_kwargs.update({
-            "pool_size": 20,
-            "max_overflow": 40,
-            "pool_recycle": 3600,
-        })
-        connect_args.update({
-            "connect_timeout": 10,
-            "application_name": "euint-app",
-        })
+        pool_kwargs.update(
+            {
+                "pool_size": 20,
+                "max_overflow": 40,
+                "pool_recycle": 3600,
+            }
+        )
+        connect_args.update(
+            {
+                "connect_timeout": 10,
+                "application_name": "euint-app",
+            }
+        )
 
     engine = create_engine(
         settings.database_url,
@@ -56,7 +60,9 @@ def _create_engine() -> Engine:
 
 engine: Engine = _create_engine()
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
+SessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, bind=engine, expire_on_commit=False
+)
 
 Base = declarative_base()
 
@@ -87,5 +93,6 @@ def get_pool_status():
         "size": getattr(pool, "size", lambda: 0)(),
         "checked_out": getattr(pool, "checkedout", lambda: 0)(),
         "overflow": getattr(pool, "overflow", lambda: 0)(),
-        "total": getattr(pool, "size", lambda: 0)() + getattr(pool, "overflow", lambda: 0)(),
+        "total": getattr(pool, "size", lambda: 0)()
+        + getattr(pool, "overflow", lambda: 0)(),
     }

@@ -29,7 +29,9 @@ class ArrayType(TypeDecorator):
     impl = JSON
     cache_ok = True
 
-    def __init__(self, item_type: Optional[TypeEngine[Any]] = None, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self, item_type: Optional[TypeEngine[Any]] = None, *args: Any, **kwargs: Any
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.item_type = item_type
 

@@ -27,14 +27,18 @@ def verify_admin_credentials(credentials: HTTPBasicCredentials = Depends(securit
     """
     try:
         # Check if username and password match configured values
-        correct_username = getattr(settings, 'admin_username', 'admin')
-        correct_password = getattr(settings, 'admin_password', 'password')
+        correct_username = getattr(settings, "admin_username", "admin")
+        correct_password = getattr(settings, "admin_password", "password")
 
-        logger.info(f"Auth attempt: username={credentials.username} (expected: {correct_username}), "
-                   f"password_match={credentials.password == correct_password}")
+        logger.info(
+            f"Auth attempt: username={credentials.username} (expected: {correct_username}), "
+            f"password_match={credentials.password == correct_password}"
+        )
 
-        if (credentials.username == correct_username and
-            credentials.password == correct_password):
+        if (
+            credentials.username == correct_username
+            and credentials.password == correct_password
+        ):
             logger.info(f"Admin authentication successful for: {credentials.username}")
             return credentials
         else:
@@ -49,19 +53,18 @@ def verify_admin_credentials(credentials: HTTPBasicCredentials = Depends(securit
         raise
     except Exception as e:
         logger.error(f"Authentication error: {type(e).__name__}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="Authentication error"
-        )
+        raise HTTPException(status_code=500, detail="Authentication error")
 
 
-def get_current_admin(credentials: HTTPBasicCredentials = Depends(verify_admin_credentials)):
+def get_current_admin(
+    credentials: HTTPBasicCredentials = Depends(verify_admin_credentials),
+):
     """
     Dependency to ensure current user is authenticated admin.
-    
+
     Returns:
         dict: Admin user info
-        
+
     Raises:
         HTTPException: If not authenticated
     """

@@ -41,28 +41,27 @@ class SentimentAnalyzer:
         try:
             scores = self.vader.polarity_scores(text)
             return {
-                'overall': scores['compound'],  # -1 to 1
-                'positive': scores['pos'],
-                'negative': scores['neg'],
-                'neutral': scores['neu'],
-                'confidence': abs(scores['compound'])  # Use compound magnitude as confidence
+                "overall": scores["compound"],  # -1 to 1
+                "positive": scores["pos"],
+                "negative": scores["neg"],
+                "neutral": scores["neu"],
+                "confidence": abs(
+                    scores["compound"]
+                ),  # Use compound magnitude as confidence
             }
         except Exception as e:
             logger.error(f"VADER analysis failed: {str(e)}")
             return {
-                'overall': 0.0,
-                'positive': 0.33,
-                'negative': 0.33,
-                'neutral': 0.34,
-                'confidence': 0.0
+                "overall": 0.0,
+                "positive": 0.33,
+                "negative": 0.33,
+                "neutral": 0.34,
+                "confidence": 0.0,
             }
 
     @retry_on_failure(max_retries=2, delay=2.0)
     def analyze_sentiment_gemini(
-        self,
-        title: str,
-        text: str,
-        source_name: str
+        self, title: str, text: str, source_name: str
     ) -> Optional[Dict[str, any]]:
         """
         Get nuanced sentiment analysis using Gemini API.
@@ -145,20 +144,27 @@ Return ONLY the JSON, no additional text."""
             # Parse JSON response
             # Clean response (sometimes Gemini adds markdown formatting)
             clean_response = response.strip()
-            if clean_response.startswith('```json'):
+            if clean_response.startswith("```json"):
                 clean_response = clean_response[7:]
-            if clean_response.startswith('```'):
+            if clean_response.startswith("```"):
                 clean_response = clean_response[3:]
-            if clean_response.endswith('```'):
+            if clean_response.endswith("```"):
                 clean_response = clean_response[:-3]
             clean_response = clean_response.strip()
 
             sentiment_data = json.loads(clean_response)
 
             # Validate structure
-            required_keys = ['overall_polarity', 'confidence', 'subjectivity', 'emotion_breakdown']
+            required_keys = [
+                "overall_polarity",
+                "confidence",
+                "subjectivity",
+                "emotion_breakdown",
+            ]
             if not all(key in sentiment_data for key in required_keys):
-                logger.error(f"Missing required keys in Gemini response: {sentiment_data.keys()}")
+                logger.error(
+                    f"Missing required keys in Gemini response: {sentiment_data.keys()}"
+                )
                 return None
 
             return sentiment_data
@@ -183,7 +189,9 @@ Return ONLY the JSON, no additional text."""
             Classification string
         """
         # Adjust thresholds based on confidence
-        confidence_multiplier = max(confidence, 0.3)  # Minimum 0.3 to avoid extreme adjustments
+        confidence_multiplier = max(
+            confidence, 0.3
+        )  # Minimum 0.3 to avoid extreme adjustments
 
         strong_threshold = 0.5 * confidence_multiplier
         moderate_threshold = 0.2 * confidence_multiplier
@@ -200,11 +208,7 @@ Return ONLY the JSON, no additional text."""
             return "NEUTRAL"
 
     def analyze_article(
-        self,
-        title: str,
-        text: str,
-        source_name: str,
-        use_gemini: bool = True
+        self, title: str, text: str, source_name: str, use_gemini: bool = True
     ) -> Dict[str, any]:
         """
         Perform complete sentiment analysis on an article.
@@ -233,34 +237,33 @@ Return ONLY the JSON, no additional text."""
 
         # Use Gemini result if available, otherwise fall back to VADER
         if gemini_result:
-            sentiment_overall = gemini_result['overall_polarity']
-            confidence = gemini_result['confidence']
-            subjectivity = gemini_result['subjectivity']
-            emotions = gemini_result['emotion_breakdown']
+            sentiment_overall = gemini_result["overall_polarity"]
+            confidence = gemini_result["confidence"]
+            subjectivity = gemini_result["subjectivity"]
+            emotions = gemini_result["emotion_breakdown"]
 
             classification = gemini_result.get(
-                'classification',
-                self.classify_sentiment(sentiment_overall, confidence)
+                "classification", self.classify_sentiment(sentiment_overall, confidence)
             )
 
             return {
-                'sentiment_overall': sentiment_overall,
-                'sentiment_confidence': confidence,
-                'sentiment_subjectivity': subjectivity,
-                'emotion_positive': emotions['positive'],
-                'emotion_negative': emotions['negative'],
-                'emotion_neutral': emotions['neutral'],
-                'classification': classification,
-                'method': 'gemini',
-                'vader_baseline': vader_result,
-                'reasoning': gemini_result.get('reasoning'),
-                'key_phrases': gemini_result.get('key_phrases')
+                "sentiment_overall": sentiment_overall,
+                "sentiment_confidence": confidence,
+                "sentiment_subjectivity": subjectivity,
+                "emotion_positive": emotions["positive"],
+                "emotion_negative": emotions["negative"],
+                "emotion_neutral": emotions["neutral"],
+                "classification": classification,
+                "method": "gemini",
+                "vader_baseline": vader_result,
+                "reasoning": gemini_result.get("reasoning"),
+                "key_phrases": gemini_result.get("key_phrases"),
             }
         else:
             # Fallback to VADER
             logger.info("Using VADER baseline sentiment (Gemini unavailable)")
-            sentiment_overall = vader_result['overall']
-            confidence = vader_result['confidence']
+            sentiment_overall = vader_result["overall"]
+            confidence = vader_result["confidence"]
 
             # Estimate subjectivity (VADER doesn't provide this)
             # If sentiment is strong (far from 0), it's likely more subjective
@@ -269,15 +272,15 @@ Return ONLY the JSON, no additional text."""
             classification = self.classify_sentiment(sentiment_overall, confidence)
 
             return {
-                'sentiment_overall': sentiment_overall,
-                'sentiment_confidence': confidence,
-                'sentiment_subjectivity': subjectivity,
-                'emotion_positive': vader_result['positive'],
-                'emotion_negative': vader_result['negative'],
-                'emotion_neutral': vader_result['neutral'],
-                'classification': classification,
-                'method': 'vader',
-                'vader_baseline': vader_result
+                "sentiment_overall": sentiment_overall,
+                "sentiment_confidence": confidence,
+                "sentiment_subjectivity": subjectivity,
+                "emotion_positive": vader_result["positive"],
+                "emotion_negative": vader_result["negative"],
+                "emotion_neutral": vader_result["neutral"],
+                "classification": classification,
+                "method": "vader",
+                "vader_baseline": vader_result,
             }
 
 

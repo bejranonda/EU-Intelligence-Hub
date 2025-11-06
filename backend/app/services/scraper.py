@@ -36,7 +36,7 @@ class NewsArticle:
         summary: str = "",
         full_text: str = "",
         publish_date: Optional[datetime] = None,
-        language: str = "en"
+        language: str = "en",
     ):
         self.title = title
         self.url = url
@@ -49,13 +49,13 @@ class NewsArticle:
     def to_dict(self) -> Dict:
         """Convert to dictionary for database storage."""
         return {
-            'title': self.title,
-            'source_url': self.url,
-            'source_name': self.source_name,
-            'summary': self.summary,
-            'full_text': self.full_text,
-            'publish_date': self.publish_date,
-            'language': self.language
+            "title": self.title,
+            "source_url": self.url,
+            "source_name": self.source_name,
+            "summary": self.summary,
+            "full_text": self.full_text,
+            "publish_date": self.publish_date,
+            "language": self.language,
         }
 
 
@@ -74,7 +74,7 @@ class NewsScraper:
         """Async context manager entry."""
         self.session = aiohttp.ClientSession(
             headers={
-                'User-Agent': 'Mozilla/5.0 (compatible; EUNewsBot/1.0; +https://github.com)'
+                "User-Agent": "Mozilla/5.0 (compatible; EUNewsBot/1.0; +https://github.com)"
             }
         )
         return self
@@ -96,9 +96,9 @@ class NewsScraper:
             )
             for source in db_sources:
                 sources[source.name] = {
-                    'base_url': source.base_url,
-                    'language': source.language,
-                    'parser': source.parser or 'generic'
+                    "base_url": source.base_url,
+                    "language": source.language,
+                    "parser": source.parser or "generic",
                 }
         except Exception as exc:
             logger.error(f"Failed to load sources from database: {exc}")
@@ -108,10 +108,26 @@ class NewsScraper:
         if not sources:
             logger.warning("No sources found in database; using default seed set")
             sources = {
-                'BBC': {'base_url': 'https://www.bbc.com', 'language': 'en', 'parser': 'generic'},
-                'Reuters': {'base_url': 'https://www.reuters.com', 'language': 'en', 'parser': 'generic'},
-                'Deutsche Welle': {'base_url': 'https://www.dw.com', 'language': 'en', 'parser': 'generic'},
-                'France 24': {'base_url': 'https://www.france24.com', 'language': 'en', 'parser': 'generic'},
+                "BBC": {
+                    "base_url": "https://www.bbc.com",
+                    "language": "en",
+                    "parser": "generic",
+                },
+                "Reuters": {
+                    "base_url": "https://www.reuters.com",
+                    "language": "en",
+                    "parser": "generic",
+                },
+                "Deutsche Welle": {
+                    "base_url": "https://www.dw.com",
+                    "language": "en",
+                    "parser": "generic",
+                },
+                "France 24": {
+                    "base_url": "https://www.france24.com",
+                    "language": "en",
+                    "parser": "generic",
+                },
             }
 
         self.sources = sources
@@ -163,15 +179,16 @@ If no recent articles found, return empty array []."""
 
             # Clean response
             clean_response = response.strip()
-            if clean_response.startswith('```json'):
+            if clean_response.startswith("```json"):
                 clean_response = clean_response[7:]
-            if clean_response.startswith('```'):
+            if clean_response.startswith("```"):
                 clean_response = clean_response[3:]
-            if clean_response.endswith('```'):
+            if clean_response.endswith("```"):
                 clean_response = clean_response[:-3]
             clean_response = clean_response.strip()
 
             import json
+
             articles_data = json.loads(clean_response)
 
             if not isinstance(articles_data, list):
@@ -186,8 +203,7 @@ If no recent articles found, return empty array []."""
             return []
 
     def create_articles_from_gemini_research(
-        self,
-        gemini_results: List[Dict]
+        self, gemini_results: List[Dict]
     ) -> List[NewsArticle]:
         """
         Convert Gemini research results to NewsArticle objects.
@@ -203,21 +219,23 @@ If no recent articles found, return empty array []."""
         for data in gemini_results:
             try:
                 # Parse date
-                date_str = data.get('date', '')
+                date_str = data.get("date", "")
                 try:
-                    publish_date = datetime.strptime(date_str, '%Y-%m-%d')
+                    publish_date = datetime.strptime(date_str, "%Y-%m-%d")
                 except (ValueError, TypeError):
                     publish_date = datetime.now()
 
                 # Create article
                 article = NewsArticle(
-                    title=data.get('title', 'Untitled'),
-                    url=data.get('url', f"https://news-search/{data.get('source', 'unknown')}"),
-                    source_name=data.get('source', 'Unknown'),
-                    summary=data.get('summary', ''),
-                    full_text=data.get('summary', ''),  # Use summary as full text
+                    title=data.get("title", "Untitled"),
+                    url=data.get(
+                        "url", f"https://news-search/{data.get('source', 'unknown')}"
+                    ),
+                    source_name=data.get("source", "Unknown"),
+                    summary=data.get("summary", ""),
+                    full_text=data.get("summary", ""),  # Use summary as full text
                     publish_date=publish_date,
-                    language='en'
+                    language="en",
                 )
 
                 articles.append(article)
@@ -229,8 +247,7 @@ If no recent articles found, return empty array []."""
         return articles
 
     async def scrape_all_sources(
-        self,
-        max_articles_per_source: Optional[int] = None
+        self, max_articles_per_source: Optional[int] = None
     ) -> List[NewsArticle]:
         """
         Scrape all configured news sources.
@@ -249,7 +266,9 @@ If no recent articles found, return empty array []."""
         logger.info("Starting news scraping with Gemini research...")
         if settings.enable_source_expansion:
             self._refresh_sources()
-            logger.info(f"Using {len(self.sources)} configured sources: {list(self.sources.keys())}")
+            logger.info(
+                f"Using {len(self.sources)} configured sources: {list(self.sources.keys())}"
+            )
 
         # Use Gemini to find recent articles
         gemini_results = self.research_thailand_news_gemini()
@@ -291,11 +310,11 @@ If no recent articles found, return empty array []."""
             "New Trade Agreement Between EU and Thailand",
             "Thailand Advances Digital Economy Initiatives",
             "European Investors Eye Thailand's Green Energy Sector",
-            "Thailand's Cultural Festival Draws International Attention"
+            "Thailand's Cultural Festival Draws International Attention",
         ]
 
         articles = []
-        sources = ['BBC', 'Reuters', 'Deutsche Welle', 'France 24']
+        sources = ["BBC", "Reuters", "Deutsche Welle", "France 24"]
 
         for i in range(min(count, len(mock_titles))):
             article = NewsArticle(
@@ -304,8 +323,8 @@ If no recent articles found, return empty array []."""
                 source_name=sources[i % len(sources)],
                 summary=f"This is a mock summary for article {i+1} about Thailand.",
                 full_text=f"Full text of mock article {i+1}. " * 20,
-                publish_date=datetime.now() - timedelta(hours=i*2),
-                language='en'
+                publish_date=datetime.now() - timedelta(hours=i * 2),
+                language="en",
             )
             articles.append(article)
 

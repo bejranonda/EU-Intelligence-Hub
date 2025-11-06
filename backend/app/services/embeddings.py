@@ -6,10 +6,12 @@ Used for semantic search in articles and keywords.
 import logging
 import numpy as np
 from typing import List, Optional
+
 # Lazy import to avoid heavy dependency during lightweight unit tests.
 try:  # pragma: no cover - tested via high level behaviour
     from sentence_transformers import SentenceTransformer
 except Exception:  # pragma: no cover
+
     class _FallbackSentenceTransformer:  # type: ignore
         def __init__(self, *_, **__):
             pass
@@ -27,7 +29,7 @@ except Exception:  # pragma: no cover
 logger = logging.getLogger(__name__)
 
 # Model will generate 384-dimensional embeddings (matches our database schema)
-MODEL_NAME = 'all-MiniLM-L6-v2'
+MODEL_NAME = "all-MiniLM-L6-v2"
 
 
 class EmbeddingGenerator:
@@ -37,10 +39,15 @@ class EmbeddingGenerator:
         self.embedding_dim = 384
         try:
             self.model = SentenceTransformer(MODEL_NAME)
-            if hasattr(self.model, "encode") and self.model.__class__.__name__ != "_FallbackSentenceTransformer":
+            if (
+                hasattr(self.model, "encode")
+                and self.model.__class__.__name__ != "_FallbackSentenceTransformer"
+            ):
                 logger.info(f"Loaded embedding model: {MODEL_NAME}")
             else:
-                logger.warning("Using fallback embedding model; embeddings will be zero vectors")
+                logger.warning(
+                    "Using fallback embedding model; embeddings will be zero vectors"
+                )
         except Exception as e:  # pragma: no cover - depends on external resource
             logger.error(f"Failed to load embedding model: {str(e)}")
             self.model = None
@@ -74,7 +81,9 @@ class EmbeddingGenerator:
             logger.error(f"Failed to generate embedding: {str(e)}")
             return None
 
-    def generate_embeddings_batch(self, texts: List[str]) -> List[Optional[List[float]]]:
+    def generate_embeddings_batch(
+        self, texts: List[str]
+    ) -> List[Optional[List[float]]]:
         """
         Generate embeddings for multiple texts (more efficient).
 
@@ -118,9 +127,7 @@ class EmbeddingGenerator:
             return [None] * len(texts)
 
     def compute_similarity(
-        self,
-        embedding1: List[float],
-        embedding2: List[float]
+        self, embedding1: List[float], embedding2: List[float]
     ) -> float:
         """
         Compute cosine similarity between two embeddings.
@@ -137,7 +144,9 @@ class EmbeddingGenerator:
             vec2 = np.array(embedding2)
 
             # Cosine similarity
-            similarity = np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+            similarity = np.dot(vec1, vec2) / (
+                np.linalg.norm(vec1) * np.linalg.norm(vec2)
+            )
             return float(similarity)
 
         except Exception as e:
@@ -148,7 +157,7 @@ class EmbeddingGenerator:
         self,
         query_embedding: List[float],
         candidate_embeddings: List[List[float]],
-        top_k: int = 10
+        top_k: int = 10,
     ) -> List[tuple]:
         """
         Find most similar embeddings to query.

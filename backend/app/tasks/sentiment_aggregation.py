@@ -10,9 +10,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.tasks.celery_app import celery_app
 from app.database import SessionLocal
-from app.models.models import (
-    Keyword, Article, KeywordArticle, SentimentTrend
-)
+from app.models.models import Keyword, Article, KeywordArticle, SentimentTrend
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +62,7 @@ def aggregate_daily_sentiment(target_date: str = None):
     try:
         # Parse target date or use yesterday
         if target_date:
-            agg_date = datetime.strptime(target_date, '%Y-%m-%d').date()
+            agg_date = datetime.strptime(target_date, "%Y-%m-%d").date()
         else:
             agg_date = date.today() - timedelta(days=1)
 
@@ -77,17 +75,21 @@ def aggregate_daily_sentiment(target_date: str = None):
         for keyword in keywords:
             try:
                 # Get articles for this keyword on this date
-                articles = db.query(Article).join(
-                    KeywordArticle,
-                    Article.id == KeywordArticle.article_id
-                ).filter(
-                    KeywordArticle.keyword_id == keyword.id,
-                    func.date(Article.publish_date) == agg_date,
-                    Article.sentiment_overall.isnot(None)
-                ).all()
+                articles = (
+                    db.query(Article)
+                    .join(KeywordArticle, Article.id == KeywordArticle.article_id)
+                    .filter(
+                        KeywordArticle.keyword_id == keyword.id,
+                        func.date(Article.publish_date) == agg_date,
+                        Article.sentiment_overall.isnot(None),
+                    )
+                    .all()
+                )
 
                 if not articles:
-                    logger.debug(f"No articles for keyword '{keyword.name_en}' on {agg_date}")
+                    logger.debug(
+                        f"No articles for keyword '{keyword.name_en}' on {agg_date}"
+                    )
                     continue
 
                 # Calculate weighted average sentiment
@@ -106,8 +108,7 @@ def aggregate_daily_sentiment(target_date: str = None):
 
                     # Count by category
                     category = classify_sentiment_category(
-                        article.sentiment_overall,
-                        article.sentiment_confidence
+                        article.sentiment_overall, article.sentiment_confidence
                     )
 
                     if "POSITIVE" in category:
@@ -124,7 +125,9 @@ def aggregate_daily_sentiment(target_date: str = None):
                     source_sentiments[source].append(article.sentiment_overall)
 
                 # Calculate average
-                avg_sentiment = total_weighted_sentiment / total_weight if total_weight > 0 else 0.0
+                avg_sentiment = (
+                    total_weighted_sentiment / total_weight if total_weight > 0 else 0.0
+                )
 
                 # Calculate average sentiment per source
                 top_sources = {}
@@ -133,10 +136,11 @@ def aggregate_daily_sentiment(target_date: str = None):
                         top_sources[source] = round(sum(scores) / len(scores), 3)
 
                 # Check if trend already exists for this date
-                existing_trend = db.query(SentimentTrend).filter_by(
-                    keyword_id=keyword.id,
-                    date=agg_date
-                ).first()
+                existing_trend = (
+                    db.query(SentimentTrend)
+                    .filter_by(keyword_id=keyword.id, date=agg_date)
+                    .first()
+                )
 
                 if existing_trend:
                     # Update existing
@@ -156,7 +160,7 @@ def aggregate_daily_sentiment(target_date: str = None):
                         positive_count=positive_count,
                         negative_count=negative_count,
                         neutral_count=neutral_count,
-                        top_sources=top_sources
+                        top_sources=top_sources,
                     )
                     db.add(trend)
 
@@ -180,18 +184,15 @@ def aggregate_daily_sentiment(target_date: str = None):
         )
 
         return {
-            'status': 'success',
-            'date': str(agg_date),
-            'keywords_processed': processed_count
+            "status": "success",
+            "date": str(agg_date),
+            "keywords_processed": processed_count,
         }
 
     except Exception as e:
         logger.error(f"Sentiment aggregation task failed: {str(e)}")
         db.rollback()
-        return {
-            'status': 'error',
-            'error': str(e)
-        }
+        return {"status": "error", "error": str(e)}
 
     finally:
         db.close()
@@ -212,12 +213,12 @@ def aggregate_keyword_sentiment(keyword_id: int, start_date: str, end_date: str)
     """
     db = SessionLocal()
     try:
-        start = datetime.strptime(start_date, '%Y-%m-%d').date()
-        end = datetime.strptime(end_date, '%Y-%m-%d').date()
+        start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end = datetime.strptime(end_date, "%Y-%m-%d").date()
 
         keyword = db.query(Keyword).filter_by(id=keyword_id).first()
         if not keyword:
-            return {'status': 'error', 'error': 'Keyword not found'}
+            return {"status": "error", "error": "Keyword not found"}
 
         # Aggregate for each date in range
         current_date = start
@@ -225,14 +226,16 @@ def aggregate_keyword_sentiment(keyword_id: int, start_date: str, end_date: str)
 
         while current_date <= end:
             # Get articles for this date
-            articles = db.query(Article).join(
-                KeywordArticle,
-                Article.id == KeywordArticle.article_id
-            ).filter(
-                KeywordArticle.keyword_id == keyword_id,
-                func.date(Article.publish_date) == current_date,
-                Article.sentiment_overall.isnot(None)
-            ).all()
+            articles = (
+                db.query(Article)
+                .join(KeywordArticle, Article.id == KeywordArticle.article_id)
+                .filter(
+                    KeywordArticle.keyword_id == keyword_id,
+                    func.date(Article.publish_date) == current_date,
+                    Article.sentiment_overall.isnot(None),
+                )
+                .all()
+            )
 
             if articles:
                 # Calculate aggregates (similar to daily task)
@@ -241,24 +244,35 @@ def aggregate_keyword_sentiment(keyword_id: int, start_date: str, end_date: str)
                     for a in articles
                 )
                 total_weight = sum(a.sentiment_confidence or 0.5 for a in articles)
-                avg_sentiment = total_weighted / total_weight if total_weight > 0 else 0.0
+                avg_sentiment = (
+                    total_weighted / total_weight if total_weight > 0 else 0.0
+                )
 
                 # Count categories
                 positive_count = sum(
-                    1 for a in articles
-                    if classify_sentiment_category(a.sentiment_overall, a.sentiment_confidence or 0.5) in ["POSITIVE", "STRONGLY_POSITIVE"]
+                    1
+                    for a in articles
+                    if classify_sentiment_category(
+                        a.sentiment_overall, a.sentiment_confidence or 0.5
+                    )
+                    in ["POSITIVE", "STRONGLY_POSITIVE"]
                 )
                 negative_count = sum(
-                    1 for a in articles
-                    if classify_sentiment_category(a.sentiment_overall, a.sentiment_confidence or 0.5) in ["NEGATIVE", "STRONGLY_NEGATIVE"]
+                    1
+                    for a in articles
+                    if classify_sentiment_category(
+                        a.sentiment_overall, a.sentiment_confidence or 0.5
+                    )
+                    in ["NEGATIVE", "STRONGLY_NEGATIVE"]
                 )
                 neutral_count = len(articles) - positive_count - negative_count
 
                 # Update or create trend
-                trend = db.query(SentimentTrend).filter_by(
-                    keyword_id=keyword_id,
-                    date=current_date
-                ).first()
+                trend = (
+                    db.query(SentimentTrend)
+                    .filter_by(keyword_id=keyword_id, date=current_date)
+                    .first()
+                )
 
                 if trend:
                     trend.avg_sentiment = avg_sentiment
@@ -274,7 +288,7 @@ def aggregate_keyword_sentiment(keyword_id: int, start_date: str, end_date: str)
                         article_count=len(articles),
                         positive_count=positive_count,
                         negative_count=negative_count,
-                        neutral_count=neutral_count
+                        neutral_count=neutral_count,
                     )
                     db.add(trend)
 
@@ -285,15 +299,15 @@ def aggregate_keyword_sentiment(keyword_id: int, start_date: str, end_date: str)
         db.commit()
 
         return {
-            'status': 'success',
-            'keyword': keyword.name_en,
-            'dates_processed': processed_dates
+            "status": "success",
+            "keyword": keyword.name_en,
+            "dates_processed": processed_dates,
         }
 
     except Exception as e:
         logger.error(f"Keyword sentiment aggregation failed: {str(e)}")
         db.rollback()
-        return {'status': 'error', 'error': str(e)}
+        return {"status": "error", "error": str(e)}
 
     finally:
         db.close()

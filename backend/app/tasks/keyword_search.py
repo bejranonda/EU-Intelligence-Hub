@@ -56,10 +56,7 @@ def search_keyword_immediately(keyword_id: int):
 
         if not keyword:
             logger.error(f"Keyword ID {keyword_id} not found")
-            return {
-                'status': 'error',
-                'error': 'Keyword not found'
-            }
+            return {"status": "error", "error": "Keyword not found"}
 
         cooldown = settings.keyword_search_cooldown_minutes
         now = datetime.utcnow()
@@ -75,12 +72,12 @@ def search_keyword_immediately(keyword_id: int):
             )
 
             return {
-                'status': 'skipped',
-                'keyword': keyword.keyword_en,
-                'reason': 'searched_recently',
-                'last_searched': keyword.last_searched.isoformat(),
-                'minutes_since': minutes_since,
-                'cooldown_remaining_minutes': max(cooldown - minutes_since, 0)
+                "status": "skipped",
+                "keyword": keyword.keyword_en,
+                "reason": "searched_recently",
+                "last_searched": keyword.last_searched.isoformat(),
+                "minutes_since": minutes_since,
+                "cooldown_remaining_minutes": max(cooldown - minutes_since, 0),
             }
 
         # Initialize services
@@ -92,7 +89,7 @@ def search_keyword_immediately(keyword_id: int):
         logger.info(f"Searching for news about '{keyword.keyword_en}'...")
         articles = scrape_news_sync(
             keyword_filter=keyword.keyword_en,
-            max_articles=20  # Limit for immediate search
+            max_articles=20,  # Limit for immediate search
         )
 
         logger.info(f"Found {len(articles)} articles for '{keyword.keyword_en}'")
@@ -104,11 +101,11 @@ def search_keyword_immediately(keyword_id: int):
         if not articles:
             logger.info(f"No articles found for '{keyword.keyword_en}'")
             return {
-                'status': 'success',
-                'keyword': keyword.keyword_en,
-                'articles_found': 0,
-                'articles_processed': 0,
-                'last_searched': now.isoformat()
+                "status": "success",
+                "keyword": keyword.keyword_en,
+                "articles_found": 0,
+                "articles_processed": 0,
+                "last_searched": now.isoformat(),
             }
 
         processed_count = 0
@@ -117,22 +114,23 @@ def search_keyword_immediately(keyword_id: int):
         for article_data in articles:
             try:
                 # Check if article already exists
-                existing = db.query(Article).filter_by(
-                    source_url=article_data.url
-                ).first()
+                existing = (
+                    db.query(Article).filter_by(source_url=article_data.url).first()
+                )
 
                 if existing:
                     # Link to keyword if not already linked
-                    existing_link = db.query(KeywordArticle).filter_by(
-                        keyword_id=keyword.id,
-                        article_id=existing.id
-                    ).first()
+                    existing_link = (
+                        db.query(KeywordArticle)
+                        .filter_by(keyword_id=keyword.id, article_id=existing.id)
+                        .first()
+                    )
 
                     if not existing_link:
                         keyword_article = KeywordArticle(
                             keyword_id=keyword.id,
                             article_id=existing.id,
-                            relevance_score=0.9  # High relevance for targeted search
+                            relevance_score=0.9,  # High relevance for targeted search
                         )
                         db.add(keyword_article)
                         db.commit()
@@ -143,9 +141,7 @@ def search_keyword_immediately(keyword_id: int):
 
                 # Extract keywords and classify
                 extraction = keyword_extractor.extract_all(
-                    article_data.title,
-                    article_data.full_text,
-                    use_gemini=True
+                    article_data.title, article_data.full_text, use_gemini=True
                 )
 
                 # Analyze sentiment
@@ -153,7 +149,7 @@ def search_keyword_immediately(keyword_id: int):
                     article_data.title,
                     article_data.full_text,
                     article_data.source_name,
-                    use_gemini=True
+                    use_gemini=True,
                 )
 
                 # Generate embedding for full article
@@ -170,16 +166,16 @@ def search_keyword_immediately(keyword_id: int):
                     published_date=article_data.publish_date,
                     scraped_date=now,
                     language=article_data.language,
-                    classification=extraction['classification'],
-                    credibility_score=extraction['classification_confidence'],
+                    classification=extraction["classification"],
+                    credibility_score=extraction["classification_confidence"],
                     embedding=embedding,
                     # Sentiment fields
-                    sentiment_overall=sentiment['sentiment_overall'],
-                    sentiment_confidence=sentiment['sentiment_confidence'],
-                    sentiment_subjectivity=sentiment['sentiment_subjectivity'],
-                    emotion_positive=sentiment['emotion_positive'],
-                    emotion_negative=sentiment['emotion_negative'],
-                    emotion_neutral=sentiment['emotion_neutral']
+                    sentiment_overall=sentiment["sentiment_overall"],
+                    sentiment_confidence=sentiment["sentiment_confidence"],
+                    sentiment_subjectivity=sentiment["sentiment_subjectivity"],
+                    emotion_positive=sentiment["emotion_positive"],
+                    emotion_negative=sentiment["emotion_negative"],
+                    emotion_neutral=sentiment["emotion_neutral"],
                 )
 
                 db.add(article)
@@ -189,7 +185,7 @@ def search_keyword_immediately(keyword_id: int):
                 keyword_article = KeywordArticle(
                     keyword_id=keyword.id,
                     article_id=article.id,
-                    relevance_score=0.95  # Very high relevance for targeted search
+                    relevance_score=0.95,  # Very high relevance for targeted search
                 )
                 db.add(keyword_article)
 
@@ -208,22 +204,18 @@ def search_keyword_immediately(keyword_id: int):
         )
 
         return {
-            'status': 'success',
-            'keyword': keyword.keyword_en,
-            'articles_found': len(articles),
-            'articles_processed': processed_count,
-            'articles_skipped': skipped_count,
-            'last_searched': now.isoformat()
+            "status": "success",
+            "keyword": keyword.keyword_en,
+            "articles_found": len(articles),
+            "articles_processed": processed_count,
+            "articles_skipped": skipped_count,
+            "last_searched": now.isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Immediate keyword search failed: {str(e)}")
         db.rollback()
-        return {
-            'status': 'error',
-            'keyword_id': keyword_id,
-            'error': str(e)
-        }
+        return {"status": "error", "keyword_id": keyword_id, "error": str(e)}
 
     finally:
         db.close()
@@ -275,9 +267,13 @@ def process_keyword_queue(batch_size: int = None):
                 continue
 
             result = search_keyword_immediately(keyword.id)
-            success = result.get('status') == 'success'
-            complete_job(db, job, success=success, error=None if success else result.get('error'))
-            processed.append({"job_id": job.id, "keyword": keyword.keyword_en, "result": result})
+            success = result.get("status") == "success"
+            complete_job(
+                db, job, success=success, error=None if success else result.get("error")
+            )
+            processed.append(
+                {"job_id": job.id, "keyword": keyword.keyword_en, "result": result}
+            )
 
         return {"status": "processed", "jobs": processed}
     except Exception as exc:  # pragma: no cover
