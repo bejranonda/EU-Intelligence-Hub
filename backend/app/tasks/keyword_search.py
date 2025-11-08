@@ -88,7 +88,6 @@ def search_keyword_immediately(keyword_id: int):
         # Scrape articles for this specific keyword
         logger.info(f"Searching for news about '{keyword.keyword_en}'...")
         articles = scrape_news_sync(
-            keyword_filter=keyword.keyword_en,
             max_articles=20,  # Limit for immediate search
         )
 

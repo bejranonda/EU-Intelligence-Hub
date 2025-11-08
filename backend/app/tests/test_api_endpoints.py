@@ -198,7 +198,7 @@ def test_get_keyword_sentiment_timeline(client, db_session, sample_keyword):
         trend = SentimentTrend(
             keyword_id=sample_keyword.id,
             date=(datetime.utcnow() - timedelta(days=i)).date(),
-            average_sentiment=0.5 + (i * 0.05),
+            avg_sentiment=0.5 + (i * 0.05),
             positive_count=10,
             negative_count=2,
             neutral_count=5,
