@@ -5,6 +5,7 @@ from typing import Optional
 import logging
 import io
 from datetime import datetime
+import uuid
 
 from app.database import get_db
 from app.models.models import Article, Keyword, KeywordArticle
@@ -143,21 +144,26 @@ async def upload_document(
         # Generate embedding
         embedding = embedding_service.generate_embedding(text)
 
+        # Generate unique source URL for manual uploads
+        generated_source_url = (
+            f"manual-upload://{datetime.utcnow().isoformat()}-{uuid.uuid4()}"
+        )
+
         # Create article record
         article = Article(
             title=doc_title,
             summary=summary,
             full_text=text,
             source=source,
-            source_url=None,
+            source_url=generated_source_url,
             published_date=datetime.utcnow(),
-            sentiment_overall=sentiment_result.get("overall_polarity"),
-            sentiment_confidence=sentiment_result.get("confidence"),
+            sentiment_overall=sentiment_result.get("sentiment_overall"),
+            sentiment_confidence=sentiment_result.get("sentiment_confidence"),
             sentiment_classification=sentiment_result.get("classification"),
-            sentiment_subjectivity=sentiment_result.get("subjectivity"),
-            emotion_positive=sentiment_result.get("emotions", {}).get("positive"),
-            emotion_negative=sentiment_result.get("emotions", {}).get("negative"),
-            emotion_neutral=sentiment_result.get("emotions", {}).get("neutral"),
+            sentiment_subjectivity=sentiment_result.get("sentiment_subjectivity"),
+            emotion_positive=sentiment_result.get("emotion_positive"),
+            emotion_negative=sentiment_result.get("emotion_negative"),
+            emotion_neutral=sentiment_result.get("emotion_neutral"),
             classification=keyword_result.get("classification", "mixed").lower(),
             embedding=embedding,
         )
@@ -212,9 +218,9 @@ async def upload_document(
                 "word_count": len(text.split()),
             },
             "sentiment": {
-                "overall": sentiment_result.get("overall_polarity"),
+                "overall": sentiment_result.get("sentiment_overall"),
                 "classification": sentiment_result.get("classification"),
-                "confidence": sentiment_result.get("confidence"),
+                "confidence": sentiment_result.get("sentiment_confidence"),
             },
             "keywords": extracted_keywords,
             "classification": keyword_result.get("classification"),

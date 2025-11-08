@@ -275,11 +275,15 @@ doc_title = title or file.filename or "Untitled Document"
 - **Lines 90-92**: Removed invalid `keyword_filter` argument from `scrape_news_sync()` call
 
 ### 3. `backend/app/api/documents.py`
+- **Line 8**: Added `import uuid` for generating unique source URLs
 - **Line 35-36**: Added None check for `file.filename`
 - **Line 118**: Added fallback for `doc_title`
 - **Lines 129-134**: Fixed `analyze_article()` call - removed await, added all arguments
 - **Lines 137-141**: Fixed `extract_all()` call - removed await, added title argument
-- **Line 161**: Fixed classification to use lowercase and call `.lower()`
+- **Lines 148-150**: Generate unique source_url to satisfy NOT NULL UNIQUE constraint
+- **Lines 160-166**: Fixed sentiment result field names (sentiment_overall, not overall_polarity)
+- **Line 167**: Fixed classification to use lowercase and call `.lower()`
+- **Lines 221-223**: Fixed API response to use correct sentiment field names
 
 ### 4. `backend/app/tests/test_api_endpoints.py`
 - **Line 201**: Fixed `average_sentiment` → `avg_sentiment`
@@ -375,6 +379,102 @@ mypy app/tasks/keyword_search.py
 - `TEST_FIXTURES_FIX.md` - Database constraint fixes
 - `BACKEND_TEST_FIX.md` - Rate limiter fix
 - `PGVECTOR_FIX.md` - pgvector extension fix
+
+---
+
+## Additional Fixes from CodeRabbit Review
+
+### 9. source_url NOT NULL Constraint Violation ✅
+
+**File**: `backend/app/api/documents.py:148-150, 158`
+
+**Error**:
+```
+IntegrityError: null value in column "source_url" violates not-null constraint
+```
+
+**Root Cause**: Article model requires `source_url` (NOT NULL UNIQUE), but code was setting it to `None` for manual uploads.
+
+**Fix**:
+```python
+# Added import
+import uuid
+
+# Generate unique source URL
+generated_source_url = (
+    f"manual-upload://{datetime.utcnow().isoformat()}-{uuid.uuid4()}"
+)
+
+# Before:
+source_url=None,
+
+# After:
+source_url=generated_source_url,
+```
+
+**Location**: `backend/app/api/documents.py:8, 148-150, 158`
+
+---
+
+### 10. Incorrect Sentiment Field Names ✅
+
+**File**: `backend/app/api/documents.py:160-166, 221-223`
+
+**Error**:
+```
+All sentiment fields storing None - wrong dictionary keys
+```
+
+**Root Cause**: Code was looking for `overall_polarity`, `confidence`, and nested `emotions`, but `analyze_article()` returns `sentiment_overall`, `sentiment_confidence`, `emotion_positive`, etc.
+
+**Function Return Format**:
+```python
+return {
+    "sentiment_overall": sentiment_overall,
+    "sentiment_confidence": confidence,
+    "sentiment_subjectivity": subjectivity,
+    "emotion_positive": emotions["positive"],
+    "emotion_negative": emotions["negative"],
+    "emotion_neutral": emotions["neutral"],
+    "classification": classification,
+}
+```
+
+**Fix**:
+```python
+# Before:
+sentiment_overall=sentiment_result.get("overall_polarity"),
+sentiment_confidence=sentiment_result.get("confidence"),
+sentiment_subjectivity=sentiment_result.get("subjectivity"),
+emotion_positive=sentiment_result.get("emotions", {}).get("positive"),
+emotion_negative=sentiment_result.get("emotions", {}).get("negative"),
+emotion_neutral=sentiment_result.get("emotions", {}).get("neutral"),
+
+# After:
+sentiment_overall=sentiment_result.get("sentiment_overall"),
+sentiment_confidence=sentiment_result.get("sentiment_confidence"),
+sentiment_subjectivity=sentiment_result.get("sentiment_subjectivity"),
+emotion_positive=sentiment_result.get("emotion_positive"),
+emotion_negative=sentiment_result.get("emotion_negative"),
+emotion_neutral=sentiment_result.get("emotion_neutral"),
+```
+
+**Also Fixed API Response**:
+```python
+# Before:
+"sentiment": {
+    "overall": sentiment_result.get("overall_polarity"),
+    "confidence": sentiment_result.get("confidence"),
+}
+
+# After:
+"sentiment": {
+    "overall": sentiment_result.get("sentiment_overall"),
+    "confidence": sentiment_result.get("sentiment_confidence"),
+}
+```
+
+**Location**: `backend/app/api/documents.py:160-166, 221-223`
 
 ---
 
