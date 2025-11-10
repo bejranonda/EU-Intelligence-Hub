@@ -18,7 +18,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -32,6 +32,7 @@ venv/
 env/
 ENV/
 .venv
+backend/lib/
 
 # Testing
 .pytest_cache/

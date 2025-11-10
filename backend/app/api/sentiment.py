@@ -191,8 +191,8 @@ async def get_sentiment_timeline(
             timeline.append(
                 {
                     "date": trend.date.isoformat(),
-                    "average_sentiment": round(trend.average_sentiment, 3)
-                    if trend.average_sentiment
+                    "average_sentiment": round(trend.avg_sentiment, 3)
+                    if trend.avg_sentiment
                     else None,
                     "positive_count": trend.positive_count,
                     "negative_count": trend.negative_count,

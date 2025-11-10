@@ -35,6 +35,12 @@ def engine():
             )
             conn.commit()
 
+    # Create pgvector extension for PostgreSQL
+    if not database_url.startswith("sqlite"):
+        with engine.connect() as conn:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+            conn.commit()
+
     Base.metadata.create_all(bind=engine)
     try:
         yield engine

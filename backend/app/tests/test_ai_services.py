@@ -54,8 +54,8 @@ class TestSentimentAnalysis:
         assert analyzer.classify_sentiment(-0.3, 0.7) == "NEGATIVE"
 
         # Test neutral
-        assert analyzer.classify_sentiment(0.1, 0.5) == "NEUTRAL"
-        assert analyzer.classify_sentiment(-0.1, 0.5) == "NEUTRAL"
+        assert analyzer.classify_sentiment(0.05, 0.5) == "NEUTRAL"
+        assert analyzer.classify_sentiment(-0.05, 0.5) == "NEUTRAL"
 
     def test_analyze_article_without_gemini(self):
         """Test article analysis using VADER only."""

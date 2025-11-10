@@ -39,7 +39,7 @@ def sample_article(db_session, sample_keyword):
         emotion_positive=0.8,
         emotion_negative=0.1,
         emotion_neutral=0.1,
-        classification="FACT",
+        classification="fact",
     )
     db_session.add(article)
     db_session.commit()
@@ -144,6 +144,7 @@ def test_get_keyword_articles_sorting(client, db_session, sample_keyword):
             summary="Summary",
             full_text="Text",
             source="Test",
+            source_url=f"https://test.com/article-{i}",
             published_date=datetime.utcnow() - timedelta(days=i),
             sentiment_overall=sentiment,
             sentiment_classification="NEUTRAL",
@@ -197,7 +198,7 @@ def test_get_keyword_sentiment_timeline(client, db_session, sample_keyword):
         trend = SentimentTrend(
             keyword_id=sample_keyword.id,
             date=(datetime.utcnow() - timedelta(days=i)).date(),
-            average_sentiment=0.5 + (i * 0.05),
+            avg_sentiment=0.5 + (i * 0.05),
             positive_count=10,
             negative_count=2,
             neutral_count=5,
@@ -228,6 +229,7 @@ def test_compare_keywords_sentiment(client, db_session):
         summary="Summary",
         full_text="Text",
         source="Test",
+        source_url="https://test.com/thailand-positive",
         published_date=datetime.utcnow(),
         sentiment_overall=0.7,
         sentiment_classification="POSITIVE",
@@ -237,6 +239,7 @@ def test_compare_keywords_sentiment(client, db_session):
         summary="Summary",
         full_text="Text",
         source="Test",
+        source_url="https://test.com/vietnam-negative",
         published_date=datetime.utcnow(),
         sentiment_overall=-0.5,
         sentiment_classification="NEGATIVE",
@@ -427,6 +430,7 @@ def test_full_workflow(client, db_session):
         summary="Summary",
         full_text="Content",
         source="Test",
+        source_url="https://test.com/test-article",
         published_date=datetime.utcnow(),
         sentiment_overall=0.6,
         sentiment_classification="POSITIVE",

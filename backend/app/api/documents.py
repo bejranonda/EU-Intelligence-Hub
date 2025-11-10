@@ -5,6 +5,7 @@ from typing import Optional
 import logging
 import io
 from datetime import datetime
+import uuid
 
 from app.database import get_db
 from app.models.models import Article, Keyword, KeywordArticle
@@ -30,6 +31,10 @@ async def extract_text_from_file(file: UploadFile) -> str:
         str: Extracted text
     """
     content = await file.read()
+
+    # Check if filename exists
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
 
     # Text files
     if file.filename.endswith(".txt"):
@@ -111,7 +116,7 @@ async def upload_document(
             )
 
         # Use filename as title if not provided
-        doc_title = title or file.filename
+        doc_title = title or file.filename or "Untitled Document"
 
         # Create summary (first 500 characters)
         summary = text[:500] + "..." if len(text) > 500 else text
@@ -122,13 +127,27 @@ async def upload_document(
         embedding_service = get_embedding_generator()
 
         # Analyze sentiment
-        sentiment_result = await sentiment_analyzer.analyze_article(text)
+        sentiment_result = sentiment_analyzer.analyze_article(
+            title=doc_title,
+            text=text,
+            source_name=source or "Manual Upload",
+            use_gemini=False
+        )
 
         # Extract keywords
-        keyword_result = await keyword_extractor.extract_all(text)
+        keyword_result = keyword_extractor.extract_all(
+            title=doc_title,
+            text=text,
+            use_gemini=False
+        )
 
         # Generate embedding
         embedding = embedding_service.generate_embedding(text)
+
+        # Generate unique source URL for manual uploads
+        generated_source_url = (
+            f"manual-upload://{datetime.utcnow().isoformat()}-{uuid.uuid4()}"
+        )
 
         # Create article record
         article = Article(
@@ -136,16 +155,16 @@ async def upload_document(
             summary=summary,
             full_text=text,
             source=source,
-            source_url=None,
+            source_url=generated_source_url,
             published_date=datetime.utcnow(),
-            sentiment_overall=sentiment_result.get("overall_polarity"),
-            sentiment_confidence=sentiment_result.get("confidence"),
+            sentiment_overall=sentiment_result.get("sentiment_overall"),
+            sentiment_confidence=sentiment_result.get("sentiment_confidence"),
             sentiment_classification=sentiment_result.get("classification"),
-            sentiment_subjectivity=sentiment_result.get("subjectivity"),
-            emotion_positive=sentiment_result.get("emotions", {}).get("positive"),
-            emotion_negative=sentiment_result.get("emotions", {}).get("negative"),
-            emotion_neutral=sentiment_result.get("emotions", {}).get("neutral"),
-            classification=keyword_result.get("classification", "MIXED"),
+            sentiment_subjectivity=sentiment_result.get("sentiment_subjectivity"),
+            emotion_positive=sentiment_result.get("emotion_positive"),
+            emotion_negative=sentiment_result.get("emotion_negative"),
+            emotion_neutral=sentiment_result.get("emotion_neutral"),
+            classification=keyword_result.get("classification", "mixed").lower(),
             embedding=embedding,
         )
 
@@ -199,9 +218,9 @@ async def upload_document(
                 "word_count": len(text.split()),
             },
             "sentiment": {
-                "overall": sentiment_result.get("overall_polarity"),
+                "overall": sentiment_result.get("sentiment_overall"),
                 "classification": sentiment_result.get("classification"),
-                "confidence": sentiment_result.get("confidence"),
+                "confidence": sentiment_result.get("sentiment_confidence"),
             },
             "keywords": extracted_keywords,
             "classification": keyword_result.get("classification"),
