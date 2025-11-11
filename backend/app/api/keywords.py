@@ -1,13 +1,13 @@
 """Keywords API endpoints."""
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func, desc
-from typing import List, Optional
+from typing import Optional
 import logging
 
 from app.database import get_db
 from app.models.models import Keyword, Article, KeywordRelation, KeywordArticle
-from app.services.embeddings import get_embedding_generator
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ async def search_keywords(
     language: Optional[str] = Query("en", description="Language code (en/th)"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Search keywords with pagination.
@@ -45,7 +45,11 @@ async def search_keywords(
             query = query.filter(
                 or_(
                     Keyword.keyword_en.ilike(search_term),
-                    Keyword.keyword_th.ilike(search_term) if language == "th" else False
+                    (
+                        Keyword.keyword_th.ilike(search_term)
+                        if language == "th"
+                        else False
+                    ),
                 )
             )
 
@@ -54,24 +58,35 @@ async def search_keywords(
 
         # Apply pagination
         offset = (page - 1) * page_size
-        keywords = query.order_by(desc(Keyword.created_at)).offset(offset).limit(page_size).all()
+        keywords = (
+            query.order_by(desc(Keyword.created_at))
+            .offset(offset)
+            .limit(page_size)
+            .all()
+        )
 
         # Format results
         results = []
         for keyword in keywords:
             # Get article count
-            article_count = db.query(func.count(KeywordArticle.article_id)).filter(
-                KeywordArticle.keyword_id == keyword.id
-            ).scalar()
+            article_count = (
+                db.query(func.count(KeywordArticle.article_id))
+                .filter(KeywordArticle.keyword_id == keyword.id)
+                .scalar()
+            )
 
-            results.append({
-                "id": keyword.id,
-                "keyword_en": keyword.keyword_en,
-                "keyword_th": keyword.keyword_th,
-                "category": keyword.category,
-                "article_count": article_count,
-                "created_at": keyword.created_at.isoformat() if keyword.created_at else None
-            })
+            results.append(
+                {
+                    "id": keyword.id,
+                    "keyword_en": keyword.keyword_en,
+                    "keyword_th": keyword.keyword_th,
+                    "category": keyword.category,
+                    "article_count": article_count,
+                    "created_at": (
+                        keyword.created_at.isoformat() if keyword.created_at else None
+                    ),
+                }
+            )
 
         return {
             "results": results,
@@ -79,20 +94,22 @@ async def search_keywords(
                 "page": page,
                 "page_size": page_size,
                 "total": total,
-                "total_pages": (total + page_size - 1) // page_size
-            }
+                "total_pages": (total + page_size - 1) // page_size,
+            },
         }
 
     except Exception as e:
         logger.error(f"Error searching keywords: {e}")
-        raise HTTPException(status_code=500, detail=f"Error searching keywords: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error searching keywords: {str(e)}"
+        )
 
 
 @router.get("/{keyword_id}")
 async def get_keyword(
     keyword_id: int,
     language: str = Query("en", description="Language code (en/th)"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get detailed information about a specific keyword.
@@ -112,17 +129,23 @@ async def get_keyword(
             raise HTTPException(status_code=404, detail="Keyword not found")
 
         # Get article count
-        article_count = db.query(func.count(KeywordArticle.article_id)).filter(
-            KeywordArticle.keyword_id == keyword.id
-        ).scalar()
+        article_count = (
+            db.query(func.count(KeywordArticle.article_id))
+            .filter(KeywordArticle.keyword_id == keyword.id)
+            .scalar()
+        )
 
         # Get related keywords count
-        related_count = db.query(func.count(KeywordRelation.id)).filter(
-            or_(
-                KeywordRelation.keyword1_id == keyword.id,
-                KeywordRelation.keyword2_id == keyword.id
+        related_count = (
+            db.query(func.count(KeywordRelation.id))
+            .filter(
+                or_(
+                    KeywordRelation.keyword1_id == keyword.id,
+                    KeywordRelation.keyword2_id == keyword.id,
+                )
             )
-        ).scalar()
+            .scalar()
+        )
 
         return {
             "id": keyword.id,
@@ -132,15 +155,21 @@ async def get_keyword(
             "category": keyword.category,
             "article_count": article_count,
             "related_keywords_count": related_count,
-            "created_at": keyword.created_at.isoformat() if keyword.created_at else None,
-            "updated_at": keyword.updated_at.isoformat() if keyword.updated_at else None
+            "created_at": (
+                keyword.created_at.isoformat() if keyword.created_at else None
+            ),
+            "updated_at": (
+                keyword.updated_at.isoformat() if keyword.updated_at else None
+            ),
         }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error getting keyword {keyword_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Error retrieving keyword: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving keyword: {str(e)}"
+        )
 
 
 @router.get("/{keyword_id}/articles")
@@ -149,7 +178,7 @@ async def get_keyword_articles(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     sort_by: str = Query("date", description="Sort by: date, sentiment"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get articles associated with a keyword.
@@ -171,11 +200,10 @@ async def get_keyword_articles(
             raise HTTPException(status_code=404, detail="Keyword not found")
 
         # Base query - join articles with keyword association
-        query = db.query(Article).join(
-            KeywordArticle,
-            Article.id == KeywordArticle.article_id
-        ).filter(
-            KeywordArticle.keyword_id == keyword_id
+        query = (
+            db.query(Article)
+            .join(KeywordArticle, Article.id == KeywordArticle.article_id)
+            .filter(KeywordArticle.keyword_id == keyword_id)
         )
 
         # Apply sorting
@@ -194,21 +222,27 @@ async def get_keyword_articles(
         # Format results
         results = []
         for article in articles:
-            results.append({
-                "id": article.id,
-                "title": article.title,
-                "summary": article.summary,
-                "source": article.source,
-                "source_url": article.source_url,
-                "published_date": article.published_date.isoformat() if article.published_date else None,
-                "sentiment": {
-                    "overall": article.sentiment_overall,
-                    "confidence": article.sentiment_confidence,
-                    "classification": article.sentiment_classification,
-                    "subjectivity": article.sentiment_subjectivity
-                },
-                "classification": article.classification
-            })
+            results.append(
+                {
+                    "id": article.id,
+                    "title": article.title,
+                    "summary": article.summary,
+                    "source": article.source,
+                    "source_url": article.source_url,
+                    "published_date": (
+                        article.published_date.isoformat()
+                        if article.published_date
+                        else None
+                    ),
+                    "sentiment": {
+                        "overall": article.sentiment_overall,
+                        "confidence": article.sentiment_confidence,
+                        "classification": article.sentiment_classification,
+                        "subjectivity": article.sentiment_subjectivity,
+                    },
+                    "classification": article.classification,
+                }
+            )
 
         return {
             "keyword_id": keyword_id,
@@ -218,22 +252,26 @@ async def get_keyword_articles(
                 "page": page,
                 "page_size": page_size,
                 "total": total,
-                "total_pages": (total + page_size - 1) // page_size
-            }
+                "total_pages": (total + page_size - 1) // page_size,
+            },
         }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error getting articles for keyword {keyword_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Error retrieving articles: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving articles: {str(e)}"
+        )
 
 
 @router.get("/{keyword_id}/relations")
 async def get_keyword_relations(
     keyword_id: int,
-    min_strength: float = Query(0.3, ge=0.0, le=1.0, description="Minimum relationship strength"),
-    db: Session = Depends(get_db)
+    min_strength: float = Query(
+        0.3, ge=0.0, le=1.0, description="Minimum relationship strength"
+    ),
+    db: Session = Depends(get_db),
 ):
     """
     Get keyword relationships for mind map visualization.
@@ -253,13 +291,17 @@ async def get_keyword_relations(
             raise HTTPException(status_code=404, detail="Keyword not found")
 
         # Get all relationships where this keyword is involved
-        relations = db.query(KeywordRelation).filter(
-            or_(
-                KeywordRelation.keyword1_id == keyword_id,
-                KeywordRelation.keyword2_id == keyword_id
-            ),
-            KeywordRelation.strength_score >= min_strength
-        ).all()
+        relations = (
+            db.query(KeywordRelation)
+            .filter(
+                or_(
+                    KeywordRelation.keyword1_id == keyword_id,
+                    KeywordRelation.keyword2_id == keyword_id,
+                ),
+                KeywordRelation.strength_score >= min_strength,
+            )
+            .all()
+        )
 
         # Build nodes and edges
         nodes = {}
@@ -270,7 +312,7 @@ async def get_keyword_relations(
             "id": str(keyword.id),
             "label": keyword.keyword_en,
             "type": "central",
-            "category": keyword.category
+            "category": keyword.category,
         }
 
         # Process relationships
@@ -278,10 +320,14 @@ async def get_keyword_relations(
             # Determine the related keyword
             if relation.keyword1_id == keyword_id:
                 related_id = relation.keyword2_id
-                related_keyword = db.query(Keyword).filter(Keyword.id == related_id).first()
+                related_keyword = (
+                    db.query(Keyword).filter(Keyword.id == related_id).first()
+                )
             else:
                 related_id = relation.keyword1_id
-                related_keyword = db.query(Keyword).filter(Keyword.id == related_id).first()
+                related_keyword = (
+                    db.query(Keyword).filter(Keyword.id == related_id).first()
+                )
 
             if not related_keyword:
                 continue
@@ -292,27 +338,31 @@ async def get_keyword_relations(
                     "id": str(related_id),
                     "label": related_keyword.keyword_en,
                     "type": "related",
-                    "category": related_keyword.category
+                    "category": related_keyword.category,
                 }
 
             # Add edge
-            edges.append({
-                "source": str(keyword_id),
-                "target": str(related_id),
-                "strength": relation.strength_score,
-                "relationship_type": relation.relation_type
-            })
+            edges.append(
+                {
+                    "source": str(keyword_id),
+                    "target": str(related_id),
+                    "strength": relation.strength_score,
+                    "relationship_type": relation.relation_type,
+                }
+            )
 
         return {
             "keyword_id": keyword_id,
             "keyword_en": keyword.keyword_en,
             "nodes": list(nodes.values()),
             "edges": edges,
-            "total_relations": len(edges)
+            "total_relations": len(edges),
         }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error getting relations for keyword {keyword_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Error retrieving relationships: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving relationships: {str(e)}"
+        )

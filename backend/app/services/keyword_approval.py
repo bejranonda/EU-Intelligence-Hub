@@ -101,7 +101,9 @@ Ensure scores are integers within 1-10. If no alternatives, return an empty arra
 
         try:
             candidate_embedding = self.embedding_service.generate_embedding(keyword)
-            existing_keywords = db.query(Keyword).filter(Keyword.embedding.isnot(None)).all()
+            existing_keywords = (
+                db.query(Keyword).filter(Keyword.embedding.isnot(None)).all()
+            )
 
             similar: List[Dict] = []
             for existing in existing_keywords:
@@ -128,7 +130,9 @@ Ensure scores are integers within 1-10. If no alternatives, return an empty arra
             return similar
 
         except Exception as exc:  # pragma: no cover
-            logger.error("Failed to compute similar keywords for '%s': %s", keyword, exc)
+            logger.error(
+                "Failed to compute similar keywords for '%s': %s", keyword, exc
+            )
             return []
 
     async def suggest_keyword_merge(
@@ -189,7 +193,9 @@ Respond in JSON:
         if not suggestion:
             return {"error": "Suggestion not found"}
 
-        logger.info("Processing suggestion %s (%s)", suggestion_id, suggestion.keyword_en)
+        logger.info(
+            "Processing suggestion %s (%s)", suggestion_id, suggestion.keyword_en
+        )
 
         evaluation = await self.evaluate_keyword_significance(
             suggestion.keyword_en,
@@ -277,7 +283,9 @@ Respond in JSON:
             "nl": "Dutch",
         }
 
-        languages_str = ", ".join(language_names.get(code, code) for code in target_languages)
+        languages_str = ", ".join(
+            language_names.get(code, code) for code in target_languages
+        )
 
         prompt = f"""
 Translate this keyword for a multilingual European news monitoring system.
@@ -300,7 +308,9 @@ Respond in JSON with language codes as keys using concise terminology suitable f
                 if translated:
                     translations[lang_code] = translated
                 else:
-                    logger.warning("Missing %s translation for '%s'", lang_code, keyword_en)
+                    logger.warning(
+                        "Missing %s translation for '%s'", lang_code, keyword_en
+                    )
 
             return translations
 
@@ -338,7 +348,9 @@ Respond in JSON with language codes as keys using concise terminology suitable f
         db.commit()
         db.refresh(new_keyword)
 
-        logger.info("Keyword '%s' approved (ID=%s)", new_keyword.keyword_en, new_keyword.id)
+        logger.info(
+            "Keyword '%s' approved (ID=%s)", new_keyword.keyword_en, new_keyword.id
+        )
         return new_keyword
 
     async def _attempt_merge(
@@ -370,7 +382,9 @@ Respond in JSON with language codes as keys using concise terminology suitable f
         if not merge_prompt.get("should_merge"):
             return None
 
-        merged_keyword_text = merge_prompt.get("merged_keyword") or suggestion.keyword_en
+        merged_keyword_text = (
+            merge_prompt.get("merged_keyword") or suggestion.keyword_en
+        )
 
         keyword_th = suggestion.keyword_th
         if not keyword_th:
@@ -394,7 +408,11 @@ Respond in JSON with language codes as keys using concise terminology suitable f
         db.refresh(merged_keyword)
 
         merge_reason = merge_prompt.get("reasoning", "Merged based on similarity")
-        logger.info("Merged keyword '%s' into '%s'", suggestion.keyword_en, merged_keyword.keyword_en)
+        logger.info(
+            "Merged keyword '%s' into '%s'",
+            suggestion.keyword_en,
+            merged_keyword.keyword_en,
+        )
 
         return merged_keyword, merge_reason
 
@@ -427,10 +445,14 @@ Respond in JSON with language codes as keys using concise terminology suitable f
 
             search_task = search_keyword_immediately.delay(keyword_id)
             logger.info(
-                "Immediate search queued for keyword %s (task=%s)", keyword_id, search_task.id
+                "Immediate search queued for keyword %s (task=%s)",
+                keyword_id,
+                search_task.id,
             )
         except Exception as exc:  # pragma: no cover
-            logger.error("Failed to trigger immediate search for keyword %s: %s", keyword_id, exc)
+            logger.error(
+                "Failed to trigger immediate search for keyword %s: %s", keyword_id, exc
+            )
 
     def _default_evaluation(self) -> Dict:
         return {

@@ -25,8 +25,12 @@ async def search_articles(
     language: Optional[str] = Query(None, description="Filter by language code"),
     start_date: Optional[str] = Query(None, description="ISO 8601 start date"),
     end_date: Optional[str] = Query(None, description="ISO 8601 end date"),
-    sentiment_min: Optional[float] = Query(None, ge=-1.0, le=1.0, description="Minimum sentiment"),
-    sentiment_max: Optional[float] = Query(None, ge=-1.0, le=1.0, description="Maximum sentiment"),
+    sentiment_min: Optional[float] = Query(
+        None, ge=-1.0, le=1.0, description="Minimum sentiment"
+    ),
+    sentiment_max: Optional[float] = Query(
+        None, ge=-1.0, le=1.0, description="Maximum sentiment"
+    ),
     sort_by: str = Query(
         "date_desc",
         description="Sort order: date_desc, date_asc, sentiment_desc, sentiment_asc, relevance",
@@ -41,8 +45,12 @@ async def search_articles(
         query_builder = db.query(Article)
 
         if keyword_id:
-            query_builder = query_builder.join(KeywordArticle, KeywordArticle.article_id == Article.id)
-            query_builder = query_builder.filter(KeywordArticle.keyword_id == keyword_id)
+            query_builder = query_builder.join(
+                KeywordArticle, KeywordArticle.article_id == Article.id
+            )
+            query_builder = query_builder.filter(
+                KeywordArticle.keyword_id == keyword_id
+            )
 
         if q:
             pattern = f"%{q}%"
@@ -55,10 +63,14 @@ async def search_articles(
             )
 
         if source:
-            query_builder = query_builder.filter(func.lower(Article.source) == source.lower())
+            query_builder = query_builder.filter(
+                func.lower(Article.source) == source.lower()
+            )
 
         if language:
-            query_builder = query_builder.filter(func.lower(Article.language) == language.lower())
+            query_builder = query_builder.filter(
+                func.lower(Article.language) == language.lower()
+            )
 
         if start_date:
             start_dt = _parse_iso_date(start_date, "start_date")
@@ -69,10 +81,14 @@ async def search_articles(
             query_builder = query_builder.filter(Article.published_date <= end_dt)
 
         if sentiment_min is not None:
-            query_builder = query_builder.filter(Article.sentiment_overall >= sentiment_min)
+            query_builder = query_builder.filter(
+                Article.sentiment_overall >= sentiment_min
+            )
 
         if sentiment_max is not None:
-            query_builder = query_builder.filter(Article.sentiment_overall <= sentiment_max)
+            query_builder = query_builder.filter(
+                Article.sentiment_overall <= sentiment_max
+            )
 
         total = query_builder.count()
 
@@ -128,8 +144,12 @@ async def semantic_search(
     q: str = Query(..., description="Search query"),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     page_size: int = Query(10, ge=1, le=50, description="Items per page"),
-    min_similarity: float = Query(0.5, ge=0.0, le=1.0, description="Minimum similarity score"),
-    keyword_id: Optional[int] = Query(None, description="Filter by associated keyword ID"),
+    min_similarity: float = Query(
+        0.5, ge=0.0, le=1.0, description="Minimum similarity score"
+    ),
+    keyword_id: Optional[int] = Query(
+        None, description="Filter by associated keyword ID"
+    ),
     source: Optional[str] = Query(None, description="Filter by source"),
     language: Optional[str] = Query(None, description="Filter by language"),
     start_date: Optional[str] = Query(None, description="ISO 8601 start date"),
@@ -149,14 +169,22 @@ async def semantic_search(
         query_builder = db.query(Article).filter(Article.embedding is not None)
 
         if keyword_id:
-            query_builder = query_builder.join(KeywordArticle, KeywordArticle.article_id == Article.id)
-            query_builder = query_builder.filter(KeywordArticle.keyword_id == keyword_id)
+            query_builder = query_builder.join(
+                KeywordArticle, KeywordArticle.article_id == Article.id
+            )
+            query_builder = query_builder.filter(
+                KeywordArticle.keyword_id == keyword_id
+            )
 
         if source:
-            query_builder = query_builder.filter(func.lower(Article.source) == source.lower())
+            query_builder = query_builder.filter(
+                func.lower(Article.source) == source.lower()
+            )
 
         if language:
-            query_builder = query_builder.filter(func.lower(Article.language) == language.lower())
+            query_builder = query_builder.filter(
+                func.lower(Article.language) == language.lower()
+            )
 
         if start_date:
             start_dt = _parse_iso_date(start_date, "start_date")
@@ -191,7 +219,9 @@ async def semantic_search(
 
         scored: List[Tuple[Article, float]] = []
         for article in articles:
-            similarity = embedding_service.compute_similarity(query_embedding, article.embedding)
+            similarity = embedding_service.compute_similarity(
+                query_embedding, article.embedding
+            )
             if similarity >= min_similarity:
                 scored.append((article, similarity))
 
@@ -244,7 +274,9 @@ async def semantic_search(
 async def find_similar_articles(
     article_id: int,
     limit: int = Query(10, ge=1, le=50, description="Maximum results"),
-    min_similarity: float = Query(0.6, ge=0.0, le=1.0, description="Minimum similarity score"),
+    min_similarity: float = Query(
+        0.6, ge=0.0, le=1.0, description="Minimum similarity score"
+    ),
     db: Session = Depends(get_db),
 ):
     """Find articles similar to a given article by embedding similarity."""
@@ -298,7 +330,9 @@ async def find_similar_articles(
         raise
     except Exception as exc:
         logger.exception("Error finding similar articles")
-        raise HTTPException(status_code=500, detail="Error finding similar articles") from exc
+        raise HTTPException(
+            status_code=500, detail="Error finding similar articles"
+        ) from exc
 
 
 def _parse_iso_date(value: str, field: str) -> datetime:
@@ -326,13 +360,21 @@ def _resolve_article_sort(sort_by: str, query_text: Optional[str]) -> Tuple:
     return (Article.published_date.desc(), Article.id.desc())
 
 
-def _sort_semantic_results(results: List[Tuple[Article, float]], sort_by: str) -> List[Tuple[Article, float]]:
+def _sort_semantic_results(
+    results: List[Tuple[Article, float]], sort_by: str
+) -> List[Tuple[Article, float]]:
     if sort_by == "date_desc":
-        return sorted(results, key=lambda pair: pair[0].published_date or datetime.min, reverse=True)
+        return sorted(
+            results,
+            key=lambda pair: pair[0].published_date or datetime.min,
+            reverse=True,
+        )
     if sort_by == "date_asc":
         return sorted(results, key=lambda pair: pair[0].published_date or datetime.min)
     if sort_by == "sentiment_desc":
-        return sorted(results, key=lambda pair: pair[0].sentiment_overall or -1.0, reverse=True)
+        return sorted(
+            results, key=lambda pair: pair[0].sentiment_overall or -1.0, reverse=True
+        )
     if sort_by == "sentiment_asc":
         return sorted(results, key=lambda pair: pair[0].sentiment_overall or 1.0)
     return sorted(results, key=lambda pair: pair[1], reverse=True)
@@ -381,7 +423,9 @@ def _serialize_article_payload(
         "summary": article.summary,
         "source": article.source,
         "source_url": article.source_url,
-        "published_date": article.published_date.isoformat() if article.published_date else None,
+        "published_date": (
+            article.published_date.isoformat() if article.published_date else None
+        ),
         "similarity_score": round(similarity, 4) if similarity is not None else None,
         "sentiment": {
             "overall": article.sentiment_overall,

@@ -1,4 +1,5 @@
 """Main FastAPI application entry point."""
+
 from fastapi import FastAPI, Depends, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
@@ -12,7 +13,12 @@ from app.config import get_settings
 from app.database import get_db, engine
 from app.models import models
 from app.monitoring import setup_logging, get_logger, get_metrics
-from app.monitoring.metrics import app_info, uptime_seconds, errors_total, exceptions_total
+from app.monitoring.metrics import (
+    app_info,
+    uptime_seconds,
+    errors_total,
+    exceptions_total,
+)
 from app.middleware import RateLimitMiddleware, SecurityHeadersMiddleware
 
 # Configure structured logging
@@ -32,21 +38,15 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_url="/api/openapi.json"
+    openapi_url="/api/openapi.json",
 )
 
 # Configure CORS - Limit origins to only necessary domains
-cors_origins = [
-    "http://localhost:3000",
-    "http://frontend:3000"
-]
+cors_origins = ["http://localhost:3000", "http://frontend:3000"]
 
 # Allow additional origins in development
 if settings.environment == "development":
-    cors_origins.extend([
-        "http://192.168.178.50:3000",
-        "http://192.168.178.70:3000"
-    ])
+    cors_origins.extend(["http://192.168.178.50:3000", "http://192.168.178.70:3000"])
 
 # Add middleware in reverse order of execution
 # Security headers should be added first (executed last)
@@ -64,6 +64,7 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "Accept"],
     max_age=3600,
 )
+
 
 # Create tables on startup
 @app.on_event("startup")
@@ -96,14 +97,14 @@ async def add_metrics_middleware(request, call_next):
     start_time = time.time()
     method = request.method
     path = request.url.path
-    
+
     try:
         response = await call_next(request)
         duration = time.time() - start_time
-        
+
         # Update uptime metric
         uptime_seconds.set(time.time() - _startup_time)
-        
+
         return response
     except Exception as e:
         duration = time.time() - start_time
@@ -119,7 +120,7 @@ async def root():
         "message": "European News Intelligence Hub API",
         "version": "1.0.0",
         "status": "operational",
-        "docs": "/docs"
+        "docs": "/docs",
     }
 
 
@@ -142,7 +143,7 @@ async def health_check(db: Session = Depends(get_db)):
     return {
         "status": "healthy" if db_status == "healthy" else "degraded",
         "database": db_status,
-        "environment": settings.environment
+        "environment": settings.environment,
     }
 
 
@@ -163,8 +164,8 @@ async def api_status():
             "news_scraping": True,
             "document_upload": True,
             "keyword_suggestions": True,
-            "mind_map_visualization": True
-        }
+            "mind_map_visualization": True,
+        },
     }
 
 
@@ -201,12 +202,20 @@ async def detailed_health_check(db: Session = Depends(get_db)):
         "database": db_status,
         "environment": settings.environment,
         "uptime_seconds": uptime,
-        "version": "1.0.0"
+        "version": "1.0.0",
     }
 
 
 # Import and include routers
-from app.api import keywords, search, sentiment, documents, suggestions, admin, admin_evaluations
+from app.api import (
+    keywords,
+    search,
+    sentiment,
+    documents,
+    suggestions,
+    admin,
+    admin_evaluations,
+)
 
 app.include_router(keywords.router, prefix="/api/keywords", tags=["keywords"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])

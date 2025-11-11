@@ -1,4 +1,5 @@
 """Tests for AI services: sentiment analysis, keyword extraction, embeddings."""
+
 import pytest
 from app.services.sentiment import get_sentiment_analyzer
 from app.services.keyword_extractor import get_keyword_extractor
@@ -16,9 +17,9 @@ class TestSentimentAnalysis:
             "This is wonderful news! Thailand's economy is thriving and tourism is booming."
         )
 
-        assert 'overall' in result
-        assert result['overall'] > 0  # Should be positive
-        assert result['positive'] > result['negative']
+        assert "overall" in result
+        assert result["overall"] > 0  # Should be positive
+        assert result["positive"] > result["negative"]
 
     def test_vader_sentiment_negative(self):
         """Test VADER analysis on negative text."""
@@ -27,9 +28,9 @@ class TestSentimentAnalysis:
             "This is terrible news. The situation is awful and getting worse."
         )
 
-        assert 'overall' in result
-        assert result['overall'] < 0  # Should be negative
-        assert result['negative'] > result['positive']
+        assert "overall" in result
+        assert result["overall"] < 0  # Should be negative
+        assert result["negative"] > result["positive"]
 
     def test_vader_sentiment_neutral(self):
         """Test VADER analysis on neutral text."""
@@ -38,8 +39,8 @@ class TestSentimentAnalysis:
             "The meeting took place on Tuesday. Officials discussed various topics."
         )
 
-        assert 'overall' in result
-        assert abs(result['overall']) < 0.5  # Should be relatively neutral
+        assert "overall" in result
+        assert abs(result["overall"]) < 0.5  # Should be relatively neutral
 
     def test_sentiment_classification(self):
         """Test sentiment classification logic."""
@@ -63,16 +64,16 @@ class TestSentimentAnalysis:
         result = analyzer.analyze_article(
             title="Thailand's Economy Grows",
             text="Thailand's economy has shown strong growth this quarter. "
-                 "Exports increased and tourism recovered significantly.",
+            "Exports increased and tourism recovered significantly.",
             source_name="Test Source",
-            use_gemini=False  # Force VADER only
+            use_gemini=False,  # Force VADER only
         )
 
-        assert 'sentiment_overall' in result
-        assert 'sentiment_confidence' in result
-        assert 'classification' in result
-        assert result['method'] == 'vader'
-        assert result['sentiment_overall'] > 0  # Should be positive
+        assert "sentiment_overall" in result
+        assert "sentiment_confidence" in result
+        assert "classification" in result
+        assert result["method"] == "vader"
+        assert result["sentiment_overall"] > 0  # Should be positive
 
 
 class TestKeywordExtraction:
@@ -98,14 +99,14 @@ class TestKeywordExtraction:
         result = extractor.extract_all(
             title="Thailand Announces Economic Policy",
             text="The Thai government announced new economic policies focusing on "
-                 "sustainable development and digital transformation.",
-            use_gemini=False
+            "sustainable development and digital transformation.",
+            use_gemini=False,
         )
 
-        assert 'keywords' in result
-        assert 'entities' in result
-        assert 'classification' in result
-        assert isinstance(result['keywords'], list)
+        assert "keywords" in result
+        assert "entities" in result
+        assert "classification" in result
+        assert isinstance(result["keywords"], list)
 
 
 class TestEmbeddings:
@@ -124,11 +125,7 @@ class TestEmbeddings:
     def test_generate_batch_embeddings(self):
         """Test batch embedding generation."""
         generator = get_embedding_generator()
-        texts = [
-            "Thailand economy",
-            "Tourism sector",
-            "Trade agreement"
-        ]
+        texts = ["Thailand economy", "Tourism sector", "Trade agreement"]
 
         embeddings = generator.generate_embeddings_batch(texts)
 
@@ -162,7 +159,7 @@ class TestEmbeddings:
             "Thai economic growth",
             "Tourism in Thailand",
             "Space exploration",
-            "Thailand GDP"
+            "Thailand GDP",
         ]
 
         query_emb = generator.generate_embedding(query_text)

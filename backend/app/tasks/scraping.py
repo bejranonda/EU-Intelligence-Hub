@@ -5,12 +5,19 @@ Scheduled tasks:
 - Hourly: Scrape news from European sources
 - Process each article: extract keywords, analyze sentiment, generate embeddings
 """
+
 import logging
 from datetime import datetime
 from sqlalchemy.orm import Session
 from app.tasks.celery_app import celery_app
 from app.database import SessionLocal
-from app.models.models import Article, Keyword, KeywordArticle, SourceIngestionHistory, NewsSource
+from app.models.models import (
+    Article,
+    Keyword,
+    KeywordArticle,
+    SourceIngestionHistory,
+    NewsSource,
+)
 from app.services.scraper import scrape_news_sync
 from app.services.sentiment import get_sentiment_analyzer
 from app.services.keyword_extractor import get_keyword_extractor
@@ -52,20 +59,20 @@ def scrape_news():
         for article_data in articles:
             try:
                 # Check if article already exists
-                existing = db.query(Article).filter_by(
-                    source_url=article_data.url
-                ).first()
+                existing = (
+                    db.query(Article).filter_by(source_url=article_data.url).first()
+                )
 
                 if existing:
-                    logger.debug(f"Article already exists: {article_data.title[:50]}...")
+                    logger.debug(
+                        f"Article already exists: {article_data.title[:50]}..."
+                    )
                     skipped_count += 1
                     continue
 
                 # Extract keywords and classify
                 extraction = keyword_extractor.extract_all(
-                    article_data.title,
-                    article_data.full_text,
-                    use_gemini=True
+                    article_data.title, article_data.full_text, use_gemini=True
                 )
 
                 # Analyze sentiment
@@ -73,7 +80,7 @@ def scrape_news():
                     article_data.title,
                     article_data.full_text,
                     article_data.source_name,
-                    use_gemini=True
+                    use_gemini=True,
                 )
 
                 # Generate embedding for full article
@@ -90,27 +97,25 @@ def scrape_news():
                     published_date=article_data.publish_date,
                     scraped_date=datetime.now(),
                     language=article_data.language,
-                    classification=extraction['classification'],
-                    credibility_score=extraction['classification_confidence'],
+                    classification=extraction["classification"],
+                    credibility_score=extraction["classification_confidence"],
                     embedding=embedding,
                     # Sentiment fields
-                    sentiment_overall=sentiment['sentiment_overall'],
-                    sentiment_confidence=sentiment['sentiment_confidence'],
-                    sentiment_subjectivity=sentiment['sentiment_subjectivity'],
-                    emotion_positive=sentiment['emotion_positive'],
-                    emotion_negative=sentiment['emotion_negative'],
-                    emotion_neutral=sentiment['emotion_neutral']
+                    sentiment_overall=sentiment["sentiment_overall"],
+                    sentiment_confidence=sentiment["sentiment_confidence"],
+                    sentiment_subjectivity=sentiment["sentiment_subjectivity"],
+                    emotion_positive=sentiment["emotion_positive"],
+                    emotion_negative=sentiment["emotion_negative"],
+                    emotion_neutral=sentiment["emotion_neutral"],
                 )
 
                 db.add(article)
                 db.flush()  # Get article ID
 
                 # Process keywords
-                for keyword_text in extraction['keywords']:
+                for keyword_text in extraction["keywords"]:
                     # Find or create keyword
-                    keyword = db.query(Keyword).filter_by(
-                        name_en=keyword_text
-                    ).first()
+                    keyword = db.query(Keyword).filter_by(name_en=keyword_text).first()
 
                     if not keyword:
                         # Generate embedding for keyword
@@ -120,10 +125,10 @@ def scrape_news():
 
                         keyword = Keyword(
                             name_en=keyword_text,
-                            category='auto',
+                            category="auto",
                             popularity_score=1.0,
                             search_count=0,
-                            embedding=keyword_embedding
+                            embedding=keyword_embedding,
                         )
                         db.add(keyword)
                         db.flush()
@@ -136,7 +141,7 @@ def scrape_news():
                     keyword_article = KeywordArticle(
                         keyword_id=keyword.id,
                         article_id=article.id,
-                        relevance_score=0.8  # Could calculate based on frequency
+                        relevance_score=0.8,  # Could calculate based on frequency
                     )
                     db.add(keyword_article)
 
@@ -176,19 +181,16 @@ def scrape_news():
         )
 
         return {
-            'status': 'success',
-            'processed': processed_count,
-            'skipped': skipped_count,
-            'total': len(articles)
+            "status": "success",
+            "processed": processed_count,
+            "skipped": skipped_count,
+            "total": len(articles),
         }
 
     except Exception as e:
         logger.error(f"Scraping task failed: {str(e)}")
         db.rollback()
-        return {
-            'status': 'error',
-            'error': str(e)
-        }
+        return {"status": "error", "error": str(e)}
 
     finally:
         db.close()
@@ -216,17 +218,12 @@ def process_single_article(article_url: str, article_title: str, article_text: s
 
         # Extract keywords and classify
         extraction = keyword_extractor.extract_all(
-            article_title,
-            article_text,
-            use_gemini=True
+            article_title, article_text, use_gemini=True
         )
 
         # Analyze sentiment
         sentiment = sentiment_analyzer.analyze_article(
-            article_title,
-            article_text,
-            "Manual Upload",
-            use_gemini=True
+            article_title, article_text, "Manual Upload", use_gemini=True
         )
 
         # Generate embedding
@@ -241,35 +238,32 @@ def process_single_article(article_url: str, article_title: str, article_text: s
             source="Manual Upload",
             published_date=datetime.now(),
             scraped_date=datetime.now(),
-            language='en',
-            classification=extraction['classification'],
-            credibility_score=extraction['classification_confidence'],
+            language="en",
+            classification=extraction["classification"],
+            credibility_score=extraction["classification_confidence"],
             embedding=embedding,
-            sentiment_overall=sentiment['sentiment_overall'],
-            sentiment_confidence=sentiment['sentiment_confidence'],
-            sentiment_subjectivity=sentiment['sentiment_subjectivity'],
-            emotion_positive=sentiment['emotion_positive'],
-            emotion_negative=sentiment['emotion_negative'],
-            emotion_neutral=sentiment['emotion_neutral']
+            sentiment_overall=sentiment["sentiment_overall"],
+            sentiment_confidence=sentiment["sentiment_confidence"],
+            sentiment_subjectivity=sentiment["sentiment_subjectivity"],
+            emotion_positive=sentiment["emotion_positive"],
+            emotion_negative=sentiment["emotion_negative"],
+            emotion_neutral=sentiment["emotion_neutral"],
         )
 
         db.add(article)
         db.commit()
 
         return {
-            'status': 'success',
-            'article_id': article.id,
-            'keywords': extraction['keywords'],
-            'sentiment': sentiment['classification']
+            "status": "success",
+            "article_id": article.id,
+            "keywords": extraction["keywords"],
+            "sentiment": sentiment["classification"],
         }
 
     except Exception as e:
         logger.error(f"Failed to process single article: {str(e)}")
         db.rollback()
-        return {
-            'status': 'error',
-            'error': str(e)
-        }
+        return {"status": "error", "error": str(e)}
 
     finally:
         db.close()

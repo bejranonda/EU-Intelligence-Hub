@@ -61,7 +61,9 @@ async def list_news_sources(
     if only_enabled:
         query = query.filter(NewsSource.enabled.is_(True))
 
-    sources = query.order_by(NewsSource.priority.desc(), NewsSource.created_at.asc()).all()
+    sources = query.order_by(
+        NewsSource.priority.desc(), NewsSource.created_at.asc()
+    ).all()
     return {"sources": [_serialize_source(source) for source in sources]}
 
 
@@ -80,7 +82,9 @@ async def create_news_source(
         .first()
     )
     if existing:
-        raise HTTPException(status_code=400, detail="Source with this name already exists")
+        raise HTTPException(
+            status_code=400, detail="Source with this name already exists"
+        )
 
     source = NewsSource(
         name=payload.name,
@@ -118,11 +122,16 @@ async def update_news_source(
     if "name" in update_data:
         duplicate = (
             db.query(NewsSource)
-            .filter(func.lower(NewsSource.name) == update_data["name"].lower(), NewsSource.id != source_id)
+            .filter(
+                func.lower(NewsSource.name) == update_data["name"].lower(),
+                NewsSource.id != source_id,
+            )
             .first()
         )
         if duplicate:
-            raise HTTPException(status_code=400, detail="Another source already uses this name")
+            raise HTTPException(
+                status_code=400, detail="Another source already uses this name"
+            )
 
     for field, value in update_data.items():
         setattr(source, field, value)
@@ -173,7 +182,9 @@ async def get_source_ingestion_history(
         "history": [
             {
                 "id": entry.id,
-                "last_run_at": entry.last_run_at.isoformat() if entry.last_run_at else None,
+                "last_run_at": (
+                    entry.last_run_at.isoformat() if entry.last_run_at else None
+                ),
                 "articles_ingested": entry.articles_ingested,
                 "success": entry.success,
                 "notes": entry.notes,
@@ -192,7 +203,9 @@ async def process_suggestion_manually(
     """Manually trigger AI processing of a keyword suggestion."""
 
     try:
-        result = await keyword_approval_service.process_suggestion(suggestion_id=suggestion_id, db=db)
+        result = await keyword_approval_service.process_suggestion(
+            suggestion_id=suggestion_id, db=db
+        )
 
         if "error" in result:
             raise HTTPException(status_code=404, detail=result["error"])
@@ -203,7 +216,9 @@ async def process_suggestion_manually(
         raise
     except Exception as exc:
         logger.error("Error processing suggestion %s: %s", suggestion_id, exc)
-        raise HTTPException(status_code=500, detail=f"Error processing suggestion: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Error processing suggestion: {exc}"
+        ) from exc
 
 
 @router.get("/keywords/suggestions/pending")
@@ -218,7 +233,9 @@ async def get_pending_suggestions(
         suggestions = (
             db.query(KeywordSuggestion)
             .filter(KeywordSuggestion.status == "pending")
-            .order_by(KeywordSuggestion.votes.desc(), KeywordSuggestion.created_at.desc())
+            .order_by(
+                KeywordSuggestion.votes.desc(), KeywordSuggestion.created_at.desc()
+            )
             .limit(limit)
             .all()
         )
@@ -249,7 +266,9 @@ async def get_pending_suggestions(
             .subquery()
         )
 
-        latest_rows = db.query(ranked_subquery).filter(ranked_subquery.c.rank == 1).all()
+        latest_rows = (
+            db.query(ranked_subquery).filter(ranked_subquery.c.rank == 1).all()
+        )
 
         latest_by_suggestion: Dict[int, KeywordEvaluation] = {
             row.suggestion_id: row for row in latest_rows  # type: ignore[attr-defined]
@@ -267,7 +286,9 @@ async def get_pending_suggestions(
 
     except Exception as exc:
         logger.error("Error getting pending suggestions: %s", exc)
-        raise HTTPException(status_code=500, detail=f"Error retrieving suggestions: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving suggestions: {exc}"
+        ) from exc
 
 
 @router.post("/keywords/suggestions/{suggestion_id}/approve")
@@ -280,7 +301,11 @@ async def approve_suggestion_manually(
     """Manually approve a suggestion and create keyword."""
 
     try:
-        suggestion = db.query(KeywordSuggestion).filter(KeywordSuggestion.id == suggestion_id).first()
+        suggestion = (
+            db.query(KeywordSuggestion)
+            .filter(KeywordSuggestion.id == suggestion_id)
+            .first()
+        )
 
         if not suggestion:
             raise HTTPException(status_code=404, detail="Suggestion not found")
@@ -323,7 +348,11 @@ async def approve_suggestion_manually(
         db.commit()
         db.refresh(new_keyword)
 
-        logger.info("Manually approved keyword '%s' (ID: %s)", suggestion.keyword_en, new_keyword.id)
+        logger.info(
+            "Manually approved keyword '%s' (ID: %s)",
+            suggestion.keyword_en,
+            new_keyword.id,
+        )
 
         response: Dict[str, Any] = {
             "success": True,
@@ -351,7 +380,9 @@ async def approve_suggestion_manually(
                 response["search_triggered"] = True
                 response["search_task_id"] = search_task.id
                 response["message"] += " and immediate search triggered"
-                logger.info("Triggered immediate search for keyword ID: %s", new_keyword.id)
+                logger.info(
+                    "Triggered immediate search for keyword ID: %s", new_keyword.id
+                )
             except Exception as exc:
                 logger.error("Failed to trigger immediate search: %s", exc)
                 response["search_triggered"] = False
@@ -364,7 +395,9 @@ async def approve_suggestion_manually(
     except Exception as exc:
         logger.error("Error approving suggestion %s: %s", suggestion_id, exc)
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error approving suggestion: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Error approving suggestion: {exc}"
+        ) from exc
 
 
 @router.post("/keywords/suggestions/{suggestion_id}/reject")
@@ -377,7 +410,11 @@ async def reject_suggestion(
     """Manually reject a keyword suggestion."""
 
     try:
-        suggestion = db.query(KeywordSuggestion).filter(KeywordSuggestion.id == suggestion_id).first()
+        suggestion = (
+            db.query(KeywordSuggestion)
+            .filter(KeywordSuggestion.id == suggestion_id)
+            .first()
+        )
 
         if not suggestion:
             raise HTTPException(status_code=404, detail="Suggestion not found")
@@ -385,16 +422,25 @@ async def reject_suggestion(
         suggestion.status = "rejected"
         db.commit()
 
-        logger.info("Rejected suggestion '%s': %s", suggestion.keyword_en, reason or "No reason provided")
+        logger.info(
+            "Rejected suggestion '%s': %s",
+            suggestion.keyword_en,
+            reason or "No reason provided",
+        )
 
-        return {"success": True, "message": f"Suggestion '{suggestion.keyword_en}' rejected"}
+        return {
+            "success": True,
+            "message": f"Suggestion '{suggestion.keyword_en}' rejected",
+        }
 
     except HTTPException:
         raise
     except Exception as exc:
         logger.error("Error rejecting suggestion %s: %s", suggestion_id, exc)
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error rejecting suggestion: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Error rejecting suggestion: {exc}"
+        ) from exc
 
 
 @router.get("/keywords/suggestions/stats")
@@ -444,14 +490,20 @@ async def get_suggestion_stats(
                 "merged": merged,
             },
             "top_pending": [
-                {"id": suggestion.id, "keyword_en": suggestion.keyword_en, "votes": suggestion.votes}
+                {
+                    "id": suggestion.id,
+                    "keyword_en": suggestion.keyword_en,
+                    "votes": suggestion.votes,
+                }
                 for suggestion in top_suggestions
             ],
         }
 
     except Exception as exc:
         logger.error("Error getting suggestion stats: %s", exc)
-        raise HTTPException(status_code=500, detail=f"Error retrieving stats: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving stats: {exc}"
+        ) from exc
 
 
 def _serialize_suggestion_with_evaluation(
@@ -473,7 +525,9 @@ def _serialize_suggestion_with_evaluation(
         "reason": suggestion.reason,
         "votes": suggestion.votes,
         "status": suggestion.status,
-        "created_at": suggestion.created_at.isoformat() if suggestion.created_at else None,
+        "created_at": (
+            suggestion.created_at.isoformat() if suggestion.created_at else None
+        ),
     }
 
     if evaluation:

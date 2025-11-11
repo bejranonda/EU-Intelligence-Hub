@@ -1,4 +1,5 @@
 """Admin endpoints for viewing keyword evaluation history."""
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -18,7 +19,11 @@ async def list_suggestion_evaluations(
 ):
     """Return evaluation history for a suggestion ordered by newest first."""
 
-    suggestion = db.query(KeywordSuggestion).filter(KeywordSuggestion.id == suggestion_id).first()
+    suggestion = (
+        db.query(KeywordSuggestion)
+        .filter(KeywordSuggestion.id == suggestion_id)
+        .first()
+    )
     if not suggestion:
         raise HTTPException(status_code=404, detail="Suggestion not found")
 
@@ -39,7 +44,9 @@ async def list_suggestion_evaluations(
                 "specificity": evaluation.specificity,
                 "decision": evaluation.decision,
                 "reasoning": evaluation.reasoning,
-                "created_at": evaluation.created_at.isoformat() if evaluation.created_at else None,
+                "created_at": (
+                    evaluation.created_at.isoformat() if evaluation.created_at else None
+                ),
             }
             for evaluation in evaluations
         ],

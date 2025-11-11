@@ -20,7 +20,9 @@ def engine():
 
     if database_url.startswith("sqlite"):
         connect_args = {"check_same_thread": False}
-        pool_args = {"poolclass": StaticPool} if database_url.endswith(":memory:") else {}
+        pool_args = (
+            {"poolclass": StaticPool} if database_url.endswith(":memory:") else {}
+        )
         engine = create_engine(database_url, connect_args=connect_args, **pool_args)
     else:
         engine = create_engine(database_url)

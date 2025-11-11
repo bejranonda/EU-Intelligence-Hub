@@ -1,4 +1,5 @@
 """Security headers middleware."""
+
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
@@ -32,7 +33,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "1; mode=block"
 
         # Strict-Transport-Security (HSTS)
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains; preload"
+        )
 
         # Referrer-Policy
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
@@ -49,7 +52,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # Cache control for sensitive content
         if request.url.path.startswith("/api/admin"):
-            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Cache-Control"] = (
+                "no-store, no-cache, must-revalidate, max-age=0"
+            )
             response.headers["Pragma"] = "no-cache"
 
         return response
