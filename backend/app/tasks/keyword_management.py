@@ -3,7 +3,6 @@ Celery tasks for automated keyword management and approval.
 """
 
 import logging
-from typing import List
 from sqlalchemy.orm import Session
 
 from app.tasks.celery_app import celery_app

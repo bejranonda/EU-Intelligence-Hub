@@ -1,0 +1,71 @@
+{
+  "version": "1.0.0",
+  "learning_engine": {
+    "enabled": true,
+    "auto_capture": true,
+    "capture_on_success_only": false,
+    "min_quality_score_to_learn": 70,
+    "pattern_retention_days": 365
+  },
+  "skill_learning": {
+    "track_effectiveness": true,
+    "min_uses_for_recommendation": 5,
+    "success_rate_threshold": 0.80,
+    "avoid_threshold": 0.50
+  },
+  "agent_learning": {
+    "track_performance": true,
+    "min_delegations_for_stats": 3,
+    "reliability_threshold": 0.85
+  },
+  "trend_analysis": {
+    "enabled": true,
+    "analysis_window_days": 30,
+    "trigger_every_n_tasks": 10
+  },
+  "optimization": {
+    "auto_optimize": true,
+    "optimize_every_n_tasks": 25,
+    "min_pattern_uses_for_optimization": 5
+  },
+  "global_learning": {
+    "enabled": false,
+    "share_patterns_globally": false,
+    "use_global_patterns": false,
+    "global_patterns_path": null
+  },
+  "quality_tracking": {
+    "enabled": true,
+    "snapshot_frequency_tasks": 10,
+    "alert_on_degradation": true,
+    "degradation_threshold": 10
+  },
+  "feedback_integration": {
+    "enabled": true,
+    "poor_rating_threshold": 2,
+    "excellent_rating_threshold": 4,
+    "boost_factor": 0.05
+  },
+  "project_specific": {
+    "project_type": "full-stack-ai-platform",
+    "primary_language": "python",
+    "secondary_language": "typescript",
+    "framework_primary": "fastapi",
+    "framework_secondary": "react",
+    "ai_stack": ["gemini", "sentence-transformers", "vader"],
+    "infrastructure": "docker-compose",
+    "focus_areas": [
+      "sentiment_analysis",
+      "semantic_search",
+      "background_processing",
+      "microservices",
+      "performance_optimization"
+    ]
+  },
+  "notification": {
+    "notify_on_pattern_capture": false,
+    "notify_on_optimization": false,
+    "notify_on_quality_degradation": true,
+    "notification_level": "warning"
+  }
+}

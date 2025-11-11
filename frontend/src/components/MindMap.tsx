@@ -1,7 +1,7 @@
 /**
  * Mind map visualization component using React Flow
  */
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import ReactFlow, {
   Node,
   Edge,
@@ -81,8 +81,8 @@ export function MindMap({ data }: MindMapProps) {
     }));
   }, [data.edges]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, , onNodesChange] = useNodesState(initialNodes);
+  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
   return (
     <Card>

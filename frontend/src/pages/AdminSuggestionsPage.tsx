@@ -31,7 +31,7 @@ type AdminSuggestion = {
 };
 
 async function loadPendingSuggestions(): Promise<AdminSuggestion[]> {
-  const data = await fetchJSON('/admin/keywords/suggestions/pending?limit=100');
+  const data = await fetchJSON('/admin/keywords/suggestions/pending?limit=100') as { pending_suggestions?: AdminSuggestion[] };
   const suggestions: AdminSuggestion[] = data.pending_suggestions ?? [];
 
   const evaluationRequests = suggestions.map((s) =>
@@ -41,7 +41,7 @@ async function loadPendingSuggestions(): Promise<AdminSuggestion[]> {
   const evaluations = await Promise.all(evaluationRequests);
 
   return suggestions.map((suggestion, index) => {
-    const evaluationPayload = evaluations[index];
+    const evaluationPayload = evaluations[index] as { evaluations?: any[] } | null;
     const latest = evaluationPayload?.evaluations?.[0];
     const latestEval = latest
       ? {

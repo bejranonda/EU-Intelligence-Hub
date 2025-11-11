@@ -6,7 +6,7 @@ import os
 from typing import Generator
 
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -27,10 +27,31 @@ def engine():
     else:
         engine = create_engine(database_url)
 
+    # Drop views first if using PostgreSQL (they depend on tables)
+    if not database_url.startswith("sqlite"):
+        with engine.connect() as conn:
+            conn.execute(
+                text("DROP VIEW IF EXISTS keyword_sentiment_summary CASCADE;")
+            )
+            conn.commit()
+
+    # Create pgvector extension for PostgreSQL
+    if not database_url.startswith("sqlite"):
+        with engine.connect() as conn:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+            conn.commit()
+
     Base.metadata.create_all(bind=engine)
     try:
         yield engine
     finally:
+        # Drop views before dropping tables
+        if not database_url.startswith("sqlite"):
+            with engine.connect() as conn:
+                conn.execute(
+                    text("DROP VIEW IF EXISTS keyword_sentiment_summary CASCADE;")
+                )
+                conn.commit()
         Base.metadata.drop_all(bind=engine)
         engine.dispose()
 
