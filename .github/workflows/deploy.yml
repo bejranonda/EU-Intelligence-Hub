@@ -18,14 +18,14 @@ jobs:
       packages: write
     
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
+
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
     
     - name: Log in to Container Registry
       if: github.event_name != 'pull_request'
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
@@ -33,7 +33,7 @@ jobs:
     
     - name: Extract metadata (backend)
       id: meta-backend
-      uses: docker/metadata-action@v4
+      uses: docker/metadata-action@v5
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend
         tags: |
@@ -43,7 +43,7 @@ jobs:
           type=sha,prefix={{branch}}-
     
     - name: Build and push backend image
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v6
       with:
         context: ./backend
         push: ${{ github.event_name != 'pull_request' }}
@@ -54,7 +54,7 @@ jobs:
     
     - name: Extract metadata (frontend)
       id: meta-frontend
-      uses: docker/metadata-action@v4
+      uses: docker/metadata-action@v5
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend
         tags: |
@@ -64,7 +64,7 @@ jobs:
           type=sha,prefix={{branch}}-
     
     - name: Build and push frontend image
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v6
       with:
         context: ./frontend
         push: ${{ github.event_name != 'pull_request' }}
@@ -77,9 +77,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-push
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
+
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Deploy to production server
       uses: appleboy/ssh-action@master
@@ -118,7 +118,7 @@ jobs:
           docker system prune -f
     
     - name: Notify deployment success
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           github.rest.issues.createComment({
@@ -165,7 +165,7 @@ jobs:
           docker system prune -f
     
     - name: Notify rollback
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           core.setFailed('❌ Deployment failed - rolled back to previous version')
