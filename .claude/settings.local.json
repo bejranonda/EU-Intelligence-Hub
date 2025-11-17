@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(curl:*)",
+      "Bash(git add:*)",
+      "Bash(rm:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)",
+      "Bash(git checkout:*)",
+      "Bash(gh repo edit:*)",
+      "Bash(https://api.github.com/repos/ChildWerapol/EU-Intelligence-Hub )",
+      "Bash(https://api.github.com/repos/ChildWerapol/EU-Intelligence-Hub/topics )"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
