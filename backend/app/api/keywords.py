@@ -137,7 +137,7 @@ async def get_keyword(
 
         # Get related keywords count
         related_count = (
-            db.query(func.count(KeywordRelation.id))
+            db.query(func.count())
             .filter(
                 or_(
                     KeywordRelation.keyword1_id == keyword.id,

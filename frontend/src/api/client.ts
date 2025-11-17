@@ -31,6 +31,20 @@ class ApiClient {
       },
     });
 
+    // Request interceptor to add auth for admin endpoints
+    this.client.interceptors.request.use(
+      (config) => {
+        // Add admin authentication for admin endpoints
+        if (config.url?.startsWith('/admin/')) {
+          const username = 'admin';
+          const password = 'change_this_admin_password';
+          config.headers.Authorization = 'Basic ' + btoa(`${username}:${password}`);
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
     // Response interceptor for error handling
     this.client.interceptors.response.use(
       (response) => response,
@@ -316,18 +330,34 @@ class ApiClient {
 export const apiClient = new ApiClient();
 export default apiClient;
 
+// Helper to create Basic Auth header for admin requests
+function getAdminAuthHeader(): string {
+  const username = 'admin';
+  const password = 'change_this_admin_password';
+  return 'Basic ' + btoa(`${username}:${password}`);
+}
+
 export async function fetchJSON<T>(url: string, options: RequestInit = {}): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string> || {}),
+  };
+
+  // Add admin authentication for admin endpoints
+  if (url.startsWith('/admin/')) {
+    headers['Authorization'] = getAdminAuthHeader();
+  }
+
   const response = await fetch(`${API_BASE_URL}${url}`, {
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
+    headers,
     ...options,
   });
 
   if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
+    const errorText = await response.text();
+    console.error(`Request failed with status ${response.status}:`, errorText);
+    throw new Error(`Request failed with status ${response.status}: ${errorText}`);
   }
 
   return (await response.json()) as T;

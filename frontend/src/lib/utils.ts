@@ -42,7 +42,9 @@ export function getSentimentColor(score: number): string {
 /**
  * Get sentiment label from classification
  */
-export function getSentimentLabel(classification: string): string {
+export function getSentimentLabel(classification: string | null): string {
+  if (!classification) return 'Unknown';
+
   const labels: { [key: string]: string } = {
     positive: 'Positive',
     negative: 'Negative',
