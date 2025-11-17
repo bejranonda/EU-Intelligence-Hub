@@ -53,7 +53,7 @@ if settings.environment == "development":
 app.add_middleware(SecurityHeadersMiddleware)
 
 # Rate limiting middleware - skip in testing environment to avoid test failures
-if settings.environment != "testing":
+if settings.environment not in ("testing", "test"):
     app.add_middleware(RateLimitMiddleware, max_requests=60, window_seconds=60)
 
 # CORS middleware

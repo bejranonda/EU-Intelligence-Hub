@@ -8,7 +8,7 @@ from typing import Dict
 
 
 TEST_ENVIRONMENT_OVERRIDES: Dict[str, str] = {
-    "ENVIRONMENT": "test",
+    "ENVIRONMENT": "testing",
     "DEBUG": "false",
     "KEYWORD_SCHEDULER_ENABLED": "false",
     "ENABLE_GEMINI_SENTIMENT": "false",

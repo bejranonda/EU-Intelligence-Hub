@@ -79,7 +79,16 @@ def client(db_session):
         finally:
             pass
 
+    # Override auth for admin endpoints in tests
+    def override_get_current_admin():
+        return {"username": "test_admin", "authenticated": True}
+
     app.dependency_overrides[get_db] = override_get_db
+
+    # Import and override auth dependency
+    from app.auth import get_current_admin
+    app.dependency_overrides[get_current_admin] = override_get_current_admin
+
     from fastapi.testclient import TestClient
 
     with TestClient(app) as test_client:

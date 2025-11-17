@@ -89,7 +89,7 @@ def aggregate_daily_sentiment(target_date: str = None):
 
                 if not articles:
                     logger.debug(
-                        f"No articles for keyword '{keyword.name_en}' on {agg_date}"
+                        f"No articles for keyword '{keyword.keyword_en}' on {agg_date}"
                     )
                     continue
 
@@ -169,13 +169,13 @@ def aggregate_daily_sentiment(target_date: str = None):
                 processed_count += 1
 
                 logger.info(
-                    f"Aggregated sentiment for '{keyword.name_en}': "
+                    f"Aggregated sentiment for '{keyword.keyword_en}': "
                     f"{avg_sentiment:.2f} ({len(articles)} articles)"
                 )
 
             except Exception as e:
                 logger.error(
-                    f"Failed to aggregate sentiment for keyword {keyword.name_en}: {str(e)}"
+                    f"Failed to aggregate sentiment for keyword {keyword.keyword_en}: {str(e)}"
                 )
                 db.rollback()
                 continue
@@ -301,7 +301,7 @@ def aggregate_keyword_sentiment(keyword_id: int, start_date: str, end_date: str)
 
         return {
             "status": "success",
-            "keyword": keyword.name_en,
+            "keyword": keyword.keyword_en,
             "dates_processed": processed_dates,
         }
 
