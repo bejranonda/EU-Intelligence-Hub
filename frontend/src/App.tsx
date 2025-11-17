@@ -14,6 +14,7 @@ import { SuggestPage } from './pages/SuggestPage';
 import { SearchPage } from './pages/SearchPage';
 import { AdminSuggestionsPage } from './pages/AdminSuggestionsPage';
 import { AdminSourcesPage } from './pages/AdminSourcesPage';
+import { AdminSearchPage } from './pages/AdminSearchPage';
 
 // Create a React Query client
 const queryClient = new QueryClient({
@@ -42,6 +43,7 @@ function App() {
           <Route path="/search" element={<SearchPage />} />
           <Route path="/admin/suggestions" element={<AdminSuggestionsPage />} />
           <Route path="/admin/sources" element={<AdminSourcesPage />} />
+          <Route path="/admin/search" element={<AdminSearchPage />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

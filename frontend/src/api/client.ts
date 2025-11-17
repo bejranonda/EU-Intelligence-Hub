@@ -171,6 +171,36 @@ class ApiClient {
     return response.data;
   }
 
+  async searchKeywordsMultilingual(params: {
+    q: string;
+    page?: number;
+    page_size?: number;
+  }) {
+    const response = await this.client.get('/api/search/keywords/multilingual', {
+      params,
+    });
+    return response.data;
+  }
+
+  // Admin Search API
+  async adminComprehensiveSearch(params: {
+    q: string;
+    search_type?: 'keywords' | 'articles' | 'suggestions' | 'sources' | 'all';
+    limit?: number;
+  }, credentials?: { username: string; password: string }) {
+    const config: any = { params };
+
+    if (credentials) {
+      config.auth = {
+        username: credentials.username,
+        password: credentials.password,
+      };
+    }
+
+    const response = await this.client.get('/admin/search', config);
+    return response.data;
+  }
+
   // Sentiment API
   async getKeywordSentiment(keywordId: number) {
     const response = await this.client.get(
