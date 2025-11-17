@@ -204,6 +204,20 @@ class ApiClient {
     return response.data;
   }
 
+  // Articles API
+  async getArticle(articleId: number) {
+    const response = await this.client.get(`/api/articles/${articleId}`);
+    return response.data;
+  }
+
+  async getSimilarArticles(articleId: number, limit: number = 5) {
+    const response = await this.client.get(
+      `/api/search/similar/${articleId}`,
+      { params: { limit } }
+    );
+    return response.data;
+  }
+
   // Documents API
   async uploadDocument(formData: FormData) {
     const response = await this.client.post('/api/documents/upload', formData, {
