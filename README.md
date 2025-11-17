@@ -9,10 +9,8 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)](https://docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-<!-- TODO: Replace with final GIF showing search → sentiment timeline → AI approval -->
-![Demo Preview Placeholder](docs/demo.gif)
+<img width="945" height="433" alt="image" src="https://github.com/user-attachments/assets/4f77c446-f93d-4b9a-8eb6-2afca6074ed2" />
 
-**[🚀 Live Demo](#)** • **[📖 API Docs](http://localhost:8000/docs)** • **[🎥 Video Walkthrough](#)**
 
 ---
 
