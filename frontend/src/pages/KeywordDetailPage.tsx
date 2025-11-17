@@ -1,17 +1,18 @@
 /**
- * Keyword detail page with articles and sentiment analysis
+ * Enhanced keyword detail page with articles and sentiment analysis
  */
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { ExternalLink, Eye } from 'lucide-react';
 import { apiClient } from '../api/client';
+import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { SentimentOverview } from '../components/SentimentOverview';
 import { SentimentTimeline } from '../components/SentimentTimeline';
 import { MindMap } from '../components/MindMap';
-import { LanguageToggle } from '../components/LanguageToggle';
 import { useLanguageStore } from '../store/languageStore';
 import {
   formatDate,
@@ -64,33 +65,33 @@ export function KeywordDetailPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link to="/">
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {keyword?.keyword}
-                </h1>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Header />
+
+      {/* Page Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {keyword?.keyword}
+              </h1>
+              <div className="flex items-center gap-3">
                 {keyword?.category && (
-                  <span className="inline-block mt-1 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                  <span className="inline-block px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800 capitalize">
                     {keyword.category}
+                  </span>
+                )}
+                {sentiment && (
+                  <span className={`text-sm font-medium ${getSentimentColor(sentiment.average_sentiment)}`}>
+                    Avg: {formatSentiment(sentiment.average_sentiment)}
                   </span>
                 )}
               </div>
             </div>
-            <LanguageToggle />
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -146,27 +147,41 @@ export function KeywordDetailPage() {
                       {articlesData.results.map((article: any) => (
                         <div
                           key={article.id}
-                          className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                          className="p-4 border rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all group"
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1">
-                              <h3 className="font-semibold text-lg mb-2">
-                                {article.title}
-                              </h3>
+                              <Link
+                                to={`/article/${article.id}`}
+                                className="block group-hover:text-blue-600"
+                              >
+                                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                                  {article.title}
+                                  <Eye className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </h3>
+                              </Link>
                               <p className="text-sm text-gray-600 mb-3">
                                 {truncate(article.summary, 200)}
                               </p>
                               <div className="flex items-center gap-4 text-sm text-gray-500">
                                 <span className="font-medium">{article.source}</span>
                                 <span>{formatDate(article.published_date)}</span>
+                                <Link
+                                  to={`/article/${article.id}`}
+                                  className="flex items-center gap-1 text-blue-600 hover:underline"
+                                >
+                                  View Analysis
+                                  <Eye className="h-3 w-3" />
+                                </Link>
                                 {article.source_url && (
                                   <a
                                     href={article.source_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-1 text-blue-600 hover:underline"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
-                                    Read more
+                                    Original
                                     <ExternalLink className="h-3 w-3" />
                                   </a>
                                 )}
@@ -223,6 +238,8 @@ export function KeywordDetailPage() {
           </div>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }

@@ -5,6 +5,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HomePage } from './pages/HomePage';
 import { KeywordDetailPage } from './pages/KeywordDetailPage';
+import { ArticleDetailPage } from './pages/ArticleDetailPage';
+import { AboutPage } from './pages/AboutPage';
+import { MethodologyPage } from './pages/MethodologyPage';
+import { ComparisonPage } from './pages/ComparisonPage';
 import { UploadPage } from './pages/UploadPage';
 import { SuggestPage } from './pages/SuggestPage';
 import { SearchPage } from './pages/SearchPage';
@@ -29,6 +33,10 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/keyword/:id" element={<KeywordDetailPage />} />
+          <Route path="/article/:id" element={<ArticleDetailPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/methodology" element={<MethodologyPage />} />
+          <Route path="/compare" element={<ComparisonPage />} />
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/suggest" element={<SuggestPage />} />
           <Route path="/search" element={<SearchPage />} />
