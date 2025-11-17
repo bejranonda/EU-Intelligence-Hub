@@ -1,7 +1,7 @@
 # 🎯 Complete Feature List
 ## EU Intelligence Hub - European News Intelligence Platform
 
-**Last Updated**: 2025-10-20
+**Last Updated**: 2025-11-17
 
 ---
 
@@ -280,25 +280,44 @@ GET    /api/sentiment/keywords/compare                  # Multi-keyword comparis
 GET    /api/sentiment/articles/{id}/sentiment           # Article-level analysis
 ```
 
-### Semantic Search (3 endpoints)
+### Semantic Search (4 endpoints) ✨ ENHANCED
 ```http
 GET    /api/search/articles                   # Full-text search
 GET    /api/search/semantic                   # Vector similarity
 GET    /api/search/similar/{article_id}       # Find similar articles
+GET    /api/search/keywords/multilingual      # Multi-language keyword search ✨ NEW
 ```
+
+**New Feature: Multilingual Keyword Search**
+- Search keywords across ALL 9 European languages simultaneously
+- Query in any language (EN, TH, DE, FR, ES, IT, PL, SV, NL)
+- Returns results showing which language matched
+- Perfect for cross-language discovery
 
 ### Document Processing (1 endpoint)
 ```http
 POST   /api/documents/upload                  # Upload PDF/DOCX/TXT
 ```
 
-### Admin - Source Management (4 endpoints) ✨ NEW
+### Admin - Source Management (5 endpoints) ✨ ENHANCED
 ```http
 GET    /admin/sources                         # List all news sources
 POST   /admin/sources                         # Add new source
 POST   /admin/sources/{id}/toggle             # Enable/disable source
+GET    /admin/search                          # Comprehensive admin search ✨ NEW
 GET    /admin/sources/{id}/ingestion          # View ingestion history
 ```
+
+**New Feature: Admin Comprehensive Search**
+- Admin-only endpoint (requires HTTP Basic Auth)
+- Searches across ALL content types simultaneously:
+  - Keywords (all 9 languages)
+  - Articles (all languages, title, summary, full_text)
+  - Keyword Suggestions (all languages + reason text)
+  - News Sources (name, country, language)
+- Filter by specific type or search all at once
+- Returns unified results grouped by type
+- Perfect for managing and auditing the entire system
 
 ### Admin - Keyword Approval (5 endpoints) ✨ NEW
 ```http
@@ -321,7 +340,7 @@ GET    /admin/suggestions/{id}/evaluations    # View AI evaluation history
 
 ## 🖥️ Frontend Features
 
-### 7 Main Pages
+### 8 Main Pages ✨ UPDATED
 
 #### 1. Home Page (`/`)
 **Features**:
@@ -389,6 +408,31 @@ GET    /admin/suggestions/{id}/evaluations    # View AI evaluation history
   - Approval rate
   - Average AI scores
   - Top categories
+
+**Requires**: Admin authentication (HTTP Basic Auth)
+
+#### 8. Admin Search Page (`/admin/search`) ✨ NEW
+**Features**:
+- Comprehensive search across ALL content types
+- Search in any of 9 European languages
+- Filter by type (keywords/articles/suggestions/sources/all)
+- Results grouped by category with visual icons
+- Direct navigation to detailed views
+- Syntax highlighting for matched terms
+- Results show:
+  - Keywords: All translations, category, popularity
+  - Articles: Title, summary, sentiment, source, language
+  - Suggestions: Status, votes, reason
+  - Sources: URL, language, country, enabled status
+- Real-time search with debouncing
+- Responsive design for mobile/tablet/desktop
+
+**Use Cases**:
+- Quick system-wide content discovery
+- Audit all content in any language
+- Find articles from specific countries
+- Manage suggestions efficiently
+- Monitor source status
 
 **Requires**: Admin authentication (HTTP Basic Auth)
 

@@ -68,6 +68,14 @@ Gemini evaluates suggestions for significance, auto-merges duplicates, and recom
 Configurable sources from BBC, Reuters, Deutsche Welle, France24, Euronews, Guardian, and more—enable/disable and manage via admin panel
 > *> Control exactly which European outlets you track—add custom sources or disable ones you don't need*
 
+🔍 **Admin Comprehensive Search** ✨ NEW
+Admin-only search across ALL content types (keywords, articles, suggestions, sources) in all 9 European languages simultaneously
+> *> Find anything anywhere in the system—search in German and find matches in French articles, Italian suggestions, or Swedish sources*
+
+🌐 **Multilingual Keyword Discovery** ✨ NEW
+Public search endpoint finds keywords across all 9 languages (EN, TH, DE, FR, ES, IT, PL, SV, NL) with matched language indicators
+> *> Type "tourism" and discover related keywords in all European languages—perfect for cross-language research*
+
 🌐 **Production-Ready Architecture**
 Docker Compose orchestration, Nginx reverse proxy, PostgreSQL with pgvector, Redis caching, SSL support, Prometheus + Grafana monitoring
 > *> Built with professional enterprise tools—secure, fast, and scalable like systems used by major companies*

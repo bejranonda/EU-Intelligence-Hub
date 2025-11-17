@@ -335,6 +335,138 @@ async def find_similar_articles(
         ) from exc
 
 
+@router.get("/keywords/multilingual")
+async def search_keywords_multilingual(
+    q: str = Query(..., min_length=1, description="Search query in any language"),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(20, ge=1, le=100, description="Items per page"),
+    db: Session = Depends(get_db),
+):
+    """
+    Search keywords across ALL European languages.
+
+    This endpoint searches keywords in:
+    - English (EN)
+    - Thai (TH)
+    - German (DE)
+    - French (FR)
+    - Spanish (ES)
+    - Italian (IT)
+    - Polish (PL)
+    - Swedish (SV)
+    - Dutch (NL)
+
+    Perfect for discovering keywords regardless of input language.
+    """
+
+    try:
+        pattern = f"%{q}%"
+
+        # Search across all language fields
+        query_builder = db.query(Keyword).filter(
+            or_(
+                Keyword.keyword_en.ilike(pattern),
+                Keyword.keyword_th.ilike(pattern),
+                Keyword.keyword_de.ilike(pattern),
+                Keyword.keyword_fr.ilike(pattern),
+                Keyword.keyword_es.ilike(pattern),
+                Keyword.keyword_it.ilike(pattern),
+                Keyword.keyword_pl.ilike(pattern),
+                Keyword.keyword_sv.ilike(pattern),
+                Keyword.keyword_nl.ilike(pattern),
+            )
+        )
+
+        # Count total results
+        total = query_builder.count()
+
+        # Order by popularity
+        query_builder = query_builder.order_by(
+            Keyword.popularity_score.desc(),
+            Keyword.search_count.desc()
+        )
+
+        # Pagination
+        offset = (page - 1) * page_size
+        keywords = query_builder.offset(offset).limit(page_size).all()
+
+        # Count articles for each keyword
+        results = []
+        for keyword in keywords:
+            article_count = (
+                db.query(func.count(KeywordArticle.article_id))
+                .filter(KeywordArticle.keyword_id == keyword.id)
+                .scalar()
+            ) or 0
+
+            # Determine which language matched
+            matched_language = "en"
+            matched_value = keyword.keyword_en
+
+            if keyword.keyword_th and q.lower() in (keyword.keyword_th or "").lower():
+                matched_language = "th"
+                matched_value = keyword.keyword_th
+            elif keyword.keyword_de and q.lower() in (keyword.keyword_de or "").lower():
+                matched_language = "de"
+                matched_value = keyword.keyword_de
+            elif keyword.keyword_fr and q.lower() in (keyword.keyword_fr or "").lower():
+                matched_language = "fr"
+                matched_value = keyword.keyword_fr
+            elif keyword.keyword_es and q.lower() in (keyword.keyword_es or "").lower():
+                matched_language = "es"
+                matched_value = keyword.keyword_es
+            elif keyword.keyword_it and q.lower() in (keyword.keyword_it or "").lower():
+                matched_language = "it"
+                matched_value = keyword.keyword_it
+            elif keyword.keyword_pl and q.lower() in (keyword.keyword_pl or "").lower():
+                matched_language = "pl"
+                matched_value = keyword.keyword_pl
+            elif keyword.keyword_sv and q.lower() in (keyword.keyword_sv or "").lower():
+                matched_language = "sv"
+                matched_value = keyword.keyword_sv
+            elif keyword.keyword_nl and q.lower() in (keyword.keyword_nl or "").lower():
+                matched_language = "nl"
+                matched_value = keyword.keyword_nl
+
+            results.append({
+                "id": keyword.id,
+                "keyword_en": keyword.keyword_en,
+                "keyword_th": keyword.keyword_th,
+                "keyword_de": keyword.keyword_de,
+                "keyword_fr": keyword.keyword_fr,
+                "keyword_es": keyword.keyword_es,
+                "keyword_it": keyword.keyword_it,
+                "keyword_pl": keyword.keyword_pl,
+                "keyword_sv": keyword.keyword_sv,
+                "keyword_nl": keyword.keyword_nl,
+                "category": keyword.category,
+                "popularity_score": keyword.popularity_score,
+                "search_count": keyword.search_count,
+                "article_count": article_count,
+                "matched_language": matched_language,
+                "matched_value": matched_value,
+            })
+
+        total_pages = (total + page_size - 1) // page_size if total else 0
+
+        return {
+            "query": q,
+            "results": results,
+            "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "total": total,
+                "total_pages": total_pages,
+            },
+        }
+
+    except Exception as exc:
+        logger.exception("Error in multilingual keyword search")
+        raise HTTPException(
+            status_code=500, detail="Error performing multilingual search"
+        ) from exc
+
+
 def _parse_iso_date(value: str, field: str) -> datetime:
     try:
         return datetime.fromisoformat(value)

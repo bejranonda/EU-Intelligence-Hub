@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.auth import get_current_admin
 from app.database import get_db
 from app.models.models import (
+    Article,
     Keyword,
     KeywordEvaluation,
     KeywordSuggestion,
@@ -503,6 +504,198 @@ async def get_suggestion_stats(
         logger.error("Error getting suggestion stats: %s", exc)
         raise HTTPException(
             status_code=500, detail=f"Error retrieving stats: {exc}"
+        ) from exc
+
+
+@router.get("/search")
+async def admin_comprehensive_search(
+    q: str = Query(..., min_length=1, description="Search query"),
+    search_type: Optional[str] = Query(
+        None,
+        description="Filter by type: keywords, articles, suggestions, sources, all",
+    ),
+    limit: int = Query(50, ge=1, le=200, description="Maximum results per type"),
+    db: Session = Depends(get_db),
+    admin: dict = Depends(get_current_admin),
+):
+    """
+    Admin-only comprehensive search across ALL content and ALL languages.
+
+    This endpoint searches:
+    - Keywords (EN, TH, DE, FR, ES, IT, PL, SV, NL)
+    - Articles (all languages, title, summary, full_text)
+    - Keyword Suggestions (all languages)
+    - News Sources (name, country)
+
+    Returns results grouped by type with relevance scoring.
+    """
+
+    try:
+        pattern = f"%{q}%"
+        results: Dict[str, Any] = {
+            "query": q,
+            "total_results": 0,
+            "keywords": [],
+            "articles": [],
+            "suggestions": [],
+            "sources": [],
+        }
+
+        # Search Keywords (all language fields)
+        if not search_type or search_type in ["keywords", "all"]:
+            keywords_query = db.query(Keyword).filter(
+                or_(
+                    Keyword.keyword_en.ilike(pattern),
+                    Keyword.keyword_th.ilike(pattern),
+                    Keyword.keyword_de.ilike(pattern),
+                    Keyword.keyword_fr.ilike(pattern),
+                    Keyword.keyword_es.ilike(pattern),
+                    Keyword.keyword_it.ilike(pattern),
+                    Keyword.keyword_pl.ilike(pattern),
+                    Keyword.keyword_sv.ilike(pattern),
+                    Keyword.keyword_nl.ilike(pattern),
+                )
+            )
+            keywords = keywords_query.limit(limit).all()
+
+            results["keywords"] = [
+                {
+                    "id": kw.id,
+                    "keyword_en": kw.keyword_en,
+                    "keyword_th": kw.keyword_th,
+                    "keyword_de": kw.keyword_de,
+                    "keyword_fr": kw.keyword_fr,
+                    "keyword_es": kw.keyword_es,
+                    "keyword_it": kw.keyword_it,
+                    "keyword_pl": kw.keyword_pl,
+                    "keyword_sv": kw.keyword_sv,
+                    "keyword_nl": kw.keyword_nl,
+                    "category": kw.category,
+                    "popularity_score": kw.popularity_score,
+                    "search_count": kw.search_count,
+                    "type": "keyword",
+                }
+                for kw in keywords
+            ]
+
+        # Search Articles (all languages)
+        if not search_type or search_type in ["articles", "all"]:
+            articles_query = db.query(Article).filter(
+                or_(
+                    Article.title.ilike(pattern),
+                    Article.summary.ilike(pattern),
+                    Article.full_text.ilike(pattern),
+                    Article.source.ilike(pattern),
+                )
+            )
+            articles = articles_query.order_by(Article.published_date.desc()).limit(
+                limit
+            ).all()
+
+            results["articles"] = [
+                {
+                    "id": art.id,
+                    "title": art.title,
+                    "summary": art.summary,
+                    "source": art.source,
+                    "source_url": art.source_url,
+                    "language": art.language,
+                    "published_date": (
+                        art.published_date.isoformat() if art.published_date else None
+                    ),
+                    "sentiment_overall": art.sentiment_overall,
+                    "sentiment_classification": art.sentiment_classification,
+                    "type": "article",
+                }
+                for art in articles
+            ]
+
+        # Search Keyword Suggestions (all languages)
+        if not search_type or search_type in ["suggestions", "all"]:
+            suggestions_query = db.query(KeywordSuggestion).filter(
+                or_(
+                    KeywordSuggestion.keyword_en.ilike(pattern),
+                    KeywordSuggestion.keyword_th.ilike(pattern),
+                    KeywordSuggestion.keyword_de.ilike(pattern),
+                    KeywordSuggestion.keyword_fr.ilike(pattern),
+                    KeywordSuggestion.keyword_es.ilike(pattern),
+                    KeywordSuggestion.keyword_it.ilike(pattern),
+                    KeywordSuggestion.keyword_pl.ilike(pattern),
+                    KeywordSuggestion.keyword_sv.ilike(pattern),
+                    KeywordSuggestion.keyword_nl.ilike(pattern),
+                    KeywordSuggestion.reason.ilike(pattern),
+                )
+            )
+            suggestions = suggestions_query.order_by(
+                KeywordSuggestion.votes.desc()
+            ).limit(limit).all()
+
+            results["suggestions"] = [
+                {
+                    "id": sug.id,
+                    "keyword_en": sug.keyword_en,
+                    "keyword_th": sug.keyword_th,
+                    "keyword_de": getattr(sug, "keyword_de", None),
+                    "keyword_fr": getattr(sug, "keyword_fr", None),
+                    "keyword_es": getattr(sug, "keyword_es", None),
+                    "keyword_it": getattr(sug, "keyword_it", None),
+                    "keyword_pl": getattr(sug, "keyword_pl", None),
+                    "keyword_sv": getattr(sug, "keyword_sv", None),
+                    "keyword_nl": getattr(sug, "keyword_nl", None),
+                    "category": sug.category,
+                    "status": sug.status,
+                    "votes": sug.votes,
+                    "reason": sug.reason,
+                    "type": "suggestion",
+                }
+                for sug in suggestions
+            ]
+
+        # Search News Sources
+        if not search_type or search_type in ["sources", "all"]:
+            sources_query = db.query(NewsSource).filter(
+                or_(
+                    NewsSource.name.ilike(pattern),
+                    NewsSource.country.ilike(pattern),
+                    NewsSource.language.ilike(pattern),
+                )
+            )
+            sources = sources_query.limit(limit).all()
+
+            results["sources"] = [
+                {
+                    "id": src.id,
+                    "name": src.name,
+                    "base_url": src.base_url,
+                    "language": src.language,
+                    "country": src.country,
+                    "enabled": src.enabled,
+                    "priority": src.priority,
+                    "type": "source",
+                }
+                for src in sources
+            ]
+
+        # Calculate total results
+        results["total_results"] = (
+            len(results["keywords"])
+            + len(results["articles"])
+            + len(results["suggestions"])
+            + len(results["sources"])
+        )
+
+        logger.info(
+            "Admin search completed: query='%s', total_results=%d",
+            q,
+            results["total_results"],
+        )
+
+        return results
+
+    except Exception as exc:
+        logger.error("Error in admin comprehensive search: %s", exc)
+        raise HTTPException(
+            status_code=500, detail=f"Error performing search: {exc}"
         ) from exc
 
 
