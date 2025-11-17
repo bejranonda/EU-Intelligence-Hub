@@ -30,6 +30,7 @@ class Keyword(Base):
     keyword_en = Column(String(255), unique=True, nullable=False, index=True)
     keyword_th = Column(String(255))
     keyword_de = Column(String(255))
+    keyword_da = Column(String(255))  # Danish
     keyword_fr = Column(String(255))
     keyword_es = Column(String(255))
     keyword_it = Column(String(255))

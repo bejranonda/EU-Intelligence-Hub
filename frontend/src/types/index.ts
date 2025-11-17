@@ -6,6 +6,8 @@ export interface Keyword {
   id: number;
   keyword_en: string;
   keyword_th?: string;
+  keyword_de?: string;
+  keyword_da?: string;
   category: string;
   article_count?: number;
   created_at?: string;
@@ -145,7 +147,7 @@ export interface DocumentUploadResponse {
   message: string;
 }
 
-export type Language = 'en' | 'th';
+export type Language = 'en' | 'th' | 'de' | 'da';
 
 export type SentimentClassification =
   | 'STRONGLY_POSITIVE'

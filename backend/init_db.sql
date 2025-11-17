@@ -9,10 +9,20 @@ CREATE TABLE IF NOT EXISTS keywords (
     id SERIAL PRIMARY KEY,
     keyword_en VARCHAR(255) UNIQUE NOT NULL,
     keyword_th VARCHAR(255),
+    keyword_de VARCHAR(255),
+    keyword_da VARCHAR(255),  -- Danish
+    keyword_fr VARCHAR(255),
+    keyword_es VARCHAR(255),
+    keyword_it VARCHAR(255),
+    keyword_pl VARCHAR(255),
+    keyword_sv VARCHAR(255),
+    keyword_nl VARCHAR(255),
     category VARCHAR(100),
     popularity_score FLOAT DEFAULT 0,
     search_count INT DEFAULT 0,
     last_searched TIMESTAMP,  -- Track when keyword was last searched for news
+    next_search_after TIMESTAMP,
+    search_priority INT DEFAULT 0,
     embedding vector(384),  -- for semantic search with Sentence Transformers
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
@@ -66,6 +76,14 @@ CREATE TABLE IF NOT EXISTS keyword_suggestions (
     id SERIAL PRIMARY KEY,
     keyword_en VARCHAR(255) NOT NULL,
     keyword_th VARCHAR(255),
+    keyword_de VARCHAR(255),
+    keyword_da VARCHAR(255),  -- Danish
+    keyword_fr VARCHAR(255),
+    keyword_es VARCHAR(255),
+    keyword_it VARCHAR(255),
+    keyword_pl VARCHAR(255),
+    keyword_sv VARCHAR(255),
+    keyword_nl VARCHAR(255),
     category VARCHAR(100) DEFAULT 'general',
     reason TEXT,
     contact_email VARCHAR(100),

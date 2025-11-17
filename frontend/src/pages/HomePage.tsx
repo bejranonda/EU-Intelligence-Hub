@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, TrendingUp, Sparkles, ArrowRight, BarChart3, Globe2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from '../api/client';
 import { KeywordCard } from '../components/KeywordCard';
 import { Header } from '../components/Header';
@@ -16,6 +17,7 @@ import { useLanguageStore } from '../store/languageStore';
 import { Keyword } from '../types';
 
 export function HomePage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [page, setPage] = useState(1);
@@ -85,37 +87,36 @@ export function HomePage() {
             <div className="text-center max-w-4xl mx-auto">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-700 bg-opacity-50 rounded-full text-sm mb-6">
                 <Sparkles className="h-4 w-4" />
-                <span>AI-Powered Intelligence Platform</span>
+                <span>{t('home.hero.badge')}</span>
               </div>
 
               <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-                Understand European News
-                <span className="block text-blue-200">Through AI Sentiment Analysis</span>
+                {t('home.hero.title')}
+                <span className="block text-blue-200">{t('home.hero.subtitle')}</span>
               </h1>
 
               <p className="text-xl md:text-2xl text-blue-100 mb-8 leading-relaxed">
-                Track sentiment trends across 12 major European news sources.
-                Analyze geopolitical topics with dual-layer AI analysis powered by VADER and Google Gemini.
+                {t('home.hero.description')}
               </p>
 
               {/* Key Features */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                 <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-left">
                   <TrendingUp className="h-8 w-8 mb-3 text-blue-200" />
-                  <h3 className="font-semibold mb-2">Real-Time Tracking</h3>
-                  <p className="text-sm text-blue-100">Monitor sentiment changes across topics in real-time</p>
+                  <h3 className="font-semibold mb-2">{t('home.features.realTime.title')}</h3>
+                  <p className="text-sm text-blue-100">{t('home.features.realTime.description')}</p>
                 </div>
 
                 <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-left">
                   <BarChart3 className="h-8 w-8 mb-3 text-blue-200" />
-                  <h3 className="font-semibold mb-2">AI Analysis</h3>
-                  <p className="text-sm text-blue-100">Dual-layer sentiment analysis with confidence scoring</p>
+                  <h3 className="font-semibold mb-2">{t('home.features.aiAnalysis.title')}</h3>
+                  <p className="text-sm text-blue-100">{t('home.features.aiAnalysis.description')}</p>
                 </div>
 
                 <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-left">
                   <Globe2 className="h-8 w-8 mb-3 text-blue-200" />
-                  <h3 className="font-semibold mb-2">Multi-Language</h3>
-                  <p className="text-sm text-blue-100">Supporting 9 European languages</p>
+                  <h3 className="font-semibold mb-2">{t('home.features.multiLanguage.title')}</h3>
+                  <p className="text-sm text-blue-100">{t('home.features.multiLanguage.description')}</p>
                 </div>
               </div>
 
@@ -124,13 +125,13 @@ export function HomePage() {
                 <Link to="/search">
                   <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50 gap-2">
                     <Search className="h-5 w-5" />
-                    Start Exploring
+                    {t('home.hero.startExploring')}
                     <ArrowRight className="h-5 w-5" />
                   </Button>
                 </Link>
                 <Link to="/methodology">
                   <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
-                    Learn How It Works
+                    {t('home.hero.learnHow')}
                   </Button>
                 </Link>
               </div>
@@ -148,7 +149,7 @@ export function HomePage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Search keywords... (e.g., Climate Change, EU Policy, Ukraine)"
+                placeholder={t('home.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-20"
@@ -159,13 +160,13 @@ export function HomePage() {
                   onClick={clearSearch}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500 hover:text-gray-700"
                 >
-                  Clear
+                  {t('home.clearSearch')}
                 </button>
               )}
             </div>
             <Button type="submit" className="gap-2">
               <Search className="h-4 w-4" />
-              Search
+              {t('common.search')}
             </Button>
           </form>
         </div>
@@ -186,27 +187,27 @@ export function HomePage() {
                   }}
                   className="capitalize"
                 >
-                  {cat === 'all' ? 'All Categories' : cat}
+                  {cat === 'all' ? t('home.allCategories') : cat}
                 </Button>
               ))}
             </div>
 
             {/* Sort Options */}
             <div className="flex gap-2 items-center">
-              <span className="text-sm text-gray-600">Sort by:</span>
+              <span className="text-sm text-gray-600">{t('home.sortBy')}</span>
               <Button
                 variant={sortBy === 'popularity' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSortBy('popularity')}
               >
-                Popularity
+                {t('home.popularity')}
               </Button>
               <Button
                 variant={sortBy === 'recent' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSortBy('recent')}
               >
-                Recent
+                {t('home.recent')}
               </Button>
             </div>
           </div>
@@ -217,10 +218,10 @@ export function HomePage() {
           <div className="mb-12">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="h-6 w-6 text-blue-600" />
-              <h2 className="text-2xl font-bold text-gray-900">Trending Topics</h2>
+              <h2 className="text-2xl font-bold text-gray-900">{t('home.trending')}</h2>
             </div>
             <p className="text-gray-600 mb-6">
-              Most analyzed keywords with recent activity
+              {t('home.trendingDescription')}
             </p>
           </div>
         )}
@@ -240,12 +241,12 @@ export function HomePage() {
             <div className="text-gray-400 mb-4">
               <Search className="h-16 w-16 mx-auto" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No keywords found</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('home.noKeywords')}</h3>
             <p className="text-gray-600 mb-6">
-              Try adjusting your search or browse all available topics
+              {t('home.noKeywordsDescription')}
             </p>
             <Button onClick={clearSearch} variant="outline">
-              Clear Search
+              {t('home.clearSearch')}
             </Button>
           </div>
         )}
@@ -269,10 +270,10 @@ export function HomePage() {
                   }}
                   disabled={page === 1}
                 >
-                  Previous
+                  {t('common.previous')}
                 </Button>
                 <span className="text-sm text-gray-600 px-4">
-                  Page {data.pagination.page} of {data.pagination.total_pages}
+                  {t('common.page')} {data.pagination.page} {t('common.of')} {data.pagination.total_pages}
                 </span>
                 <Button
                   variant="outline"
@@ -282,14 +283,14 @@ export function HomePage() {
                   }}
                   disabled={page === data.pagination.total_pages}
                 >
-                  Next
+                  {t('common.next')}
                 </Button>
               </div>
             )}
 
             {/* Results Count */}
             <p className="text-center mt-4 text-sm text-gray-500">
-              Showing {filteredKeywords.length} of {data.pagination.total} keywords
+              {t('common.showing')} {filteredKeywords.length} {t('common.of')} {data.pagination.total} {t('home.showingKeywords')}
             </p>
           </>
         )}
