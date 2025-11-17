@@ -1,0 +1,227 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "search": "Search",
+    "clear": "Clear",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page",
+    "of": "of",
+    "showing": "Showing",
+    "results": "results",
+    "noResults": "No results found",
+    "tryAgain": "Try again",
+    "learnMore": "Learn More"
+  },
+  "header": {
+    "title": "EU Intelligence Hub",
+    "subtitle": "European News Sentiment Analysis",
+    "home": "Home",
+    "search": "Search",
+    "compare": "Compare",
+    "upload": "Upload",
+    "suggest": "Suggest",
+    "about": "About",
+    "methodology": "Methodology",
+    "admin": "Admin"
+  },
+  "footer": {
+    "copyright": "© 2024 EU Intelligence Hub. All rights reserved.",
+    "description": "AI-powered sentiment analysis for European news sources",
+    "links": "Quick Links",
+    "contact": "Contact",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  },
+  "home": {
+    "hero": {
+      "badge": "AI-Powered Intelligence Platform",
+      "title": "Understand European News",
+      "subtitle": "Through AI Sentiment Analysis",
+      "description": "Track sentiment trends across 12 major European news sources. Analyze geopolitical topics with dual-layer AI analysis powered by VADER and Google Gemini.",
+      "startExploring": "Start Exploring",
+      "learnHow": "Learn How It Works"
+    },
+    "features": {
+      "realTime": {
+        "title": "Real-Time Tracking",
+        "description": "Monitor sentiment changes across topics in real-time"
+      },
+      "aiAnalysis": {
+        "title": "AI Analysis",
+        "description": "Dual-layer sentiment analysis with confidence scoring"
+      },
+      "multiLanguage": {
+        "title": "Multi-Language",
+        "description": "Supporting 9 European languages"
+      }
+    },
+    "trending": "Trending Topics",
+    "trendingDescription": "Most analyzed keywords with recent activity",
+    "searchPlaceholder": "Search keywords... (e.g., Climate Change, EU Policy, Ukraine)",
+    "allCategories": "All Categories",
+    "sortBy": "Sort by:",
+    "popularity": "Popularity",
+    "recent": "Recent",
+    "noKeywords": "No keywords found",
+    "noKeywordsDescription": "Try adjusting your search or browse all available topics",
+    "clearSearch": "Clear Search",
+    "showingKeywords": "keywords"
+  },
+  "keyword": {
+    "details": "Keyword Details",
+    "articles": "Articles",
+    "sentiment": "Sentiment",
+    "timeline": "Timeline",
+    "relations": "Relations",
+    "category": "Category",
+    "popularity": "Popularity",
+    "articleCount": "Article Count",
+    "averageSentiment": "Average Sentiment",
+    "noArticles": "No articles found for this keyword",
+    "loadingArticles": "Loading articles...",
+    "viewArticle": "View Article"
+  },
+  "sentiment": {
+    "overall": "Overall Sentiment",
+    "positive": "Positive",
+    "negative": "Negative",
+    "neutral": "Neutral",
+    "stronglyPositive": "Strongly Positive",
+    "stronglyNegative": "Strongly Negative",
+    "confidence": "Confidence",
+    "classification": "Classification",
+    "distribution": "Sentiment Distribution",
+    "trend": "Trend",
+    "improving": "Improving",
+    "declining": "Declining",
+    "stable": "Stable",
+    "insufficientData": "Insufficient Data",
+    "bySource": "By Source",
+    "mostPositive": "Most Positive",
+    "mostNegative": "Most Negative"
+  },
+  "search": {
+    "title": "Search Articles",
+    "semanticSearch": "Semantic Search",
+    "fullTextSearch": "Full-Text Search",
+    "searchPlaceholder": "Search for articles, topics, or keywords...",
+    "filters": "Filters",
+    "source": "Source",
+    "dateRange": "Date Range",
+    "sentimentFilter": "Sentiment",
+    "searchResults": "Search Results",
+    "noResults": "No articles found",
+    "tryDifferent": "Try different keywords or adjust your filters"
+  },
+  "upload": {
+    "title": "Upload Document",
+    "description": "Upload a news article for AI analysis",
+    "dragDrop": "Drag and drop a file here, or click to browse",
+    "supportedFormats": "Supported formats: TXT, PDF, DOCX",
+    "maxSize": "Maximum file size: 10MB",
+    "uploading": "Uploading...",
+    "analyzing": "Analyzing...",
+    "success": "Document uploaded and analyzed successfully!",
+    "error": "Error uploading document",
+    "viewResults": "View Results"
+  },
+  "suggest": {
+    "title": "Suggest a Keyword",
+    "description": "Suggest a new keyword for tracking",
+    "keywordLabel": "Keyword (English)",
+    "keywordPlaceholder": "Enter keyword in English",
+    "thaiTranslation": "Thai Translation (Optional)",
+    "germanTranslation": "German Translation (Optional)",
+    "danishTranslation": "Danish Translation (Optional)",
+    "categoryLabel": "Category",
+    "reasonLabel": "Reason for Suggestion",
+    "reasonPlaceholder": "Why should this keyword be tracked?",
+    "emailLabel": "Contact Email (Optional)",
+    "emailPlaceholder": "your@email.com",
+    "submitSuggestion": "Submit Suggestion",
+    "success": "Suggestion submitted successfully!",
+    "error": "Error submitting suggestion",
+    "selectCategory": "Select a category"
+  },
+  "admin": {
+    "suggestions": {
+      "title": "Keyword Suggestions",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "approve": "Approve",
+      "reject": "Reject",
+      "votes": "Votes",
+      "reason": "Reason",
+      "noSuggestions": "No suggestions found"
+    },
+    "sources": {
+      "title": "News Sources",
+      "addSource": "Add Source",
+      "name": "Name",
+      "url": "URL",
+      "language": "Language",
+      "country": "Country",
+      "priority": "Priority",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "lastScraped": "Last Scraped",
+      "toggle": "Toggle",
+      "noSources": "No sources found"
+    },
+    "search": {
+      "title": "Search Management",
+      "queuedSearches": "Queued Searches",
+      "searchHistory": "Search History",
+      "noSearches": "No searches found"
+    }
+  },
+  "about": {
+    "title": "About EU Intelligence Hub",
+    "mission": "Our Mission",
+    "missionText": "To provide transparent, AI-powered sentiment analysis of European news sources, helping users understand geopolitical trends and media narratives.",
+    "howItWorks": "How It Works",
+    "team": "Our Team",
+    "contact": "Contact Us"
+  },
+  "methodology": {
+    "title": "Our Methodology",
+    "overview": "Overview",
+    "overviewText": "We use a dual-layer AI approach combining VADER sentiment analysis with Google Gemini for enhanced accuracy.",
+    "dataCollection": "Data Collection",
+    "sentimentAnalysis": "Sentiment Analysis",
+    "vectorSearch": "Semantic Search",
+    "sources": "News Sources"
+  },
+  "compare": {
+    "title": "Compare Keywords",
+    "selectKeywords": "Select keywords to compare",
+    "addKeyword": "Add Keyword",
+    "comparison": "Comparison",
+    "noKeywordsSelected": "No keywords selected",
+    "selectAtLeastTwo": "Select at least two keywords to compare"
+  },
+  "categories": {
+    "all": "All Categories",
+    "geopolitics": "Geopolitics",
+    "economy": "Economy",
+    "environment": "Environment",
+    "technology": "Technology",
+    "society": "Society",
+    "general": "General"
+  },
+  "languages": {
+    "en": "English",
+    "th": "Thai",
+    "de": "German",
+    "da": "Danish"
+  }
+}

@@ -1,5 +1,5 @@
 /**
- * Global navigation header component
+ * Global navigation header component with i18n support
  */
 import { Link, useLocation } from 'react-router-dom';
 import { Search, TrendingUp, Upload, Lightbulb, Home, BarChart2 } from 'lucide-react';
@@ -8,10 +8,12 @@ import { LanguageToggle } from './LanguageToggle';
 import { useState } from 'react';
 import { Input } from './ui/input';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export function Header() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -37,10 +39,10 @@ export function Header() {
             </div>
             <div className="hidden sm:block">
               <h1 className="text-xl font-bold text-gray-900">
-                EU Intelligence Hub
+                {t('header.title')}
               </h1>
               <p className="text-xs text-gray-600">
-                AI-Powered News Sentiment Analysis
+                {t('header.subtitle')}
               </p>
             </div>
           </Link>
@@ -51,7 +53,7 @@ export function Header() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Quick search keywords..."
+                placeholder={t('home.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2 text-sm"
@@ -84,7 +86,7 @@ export function Header() {
               className="gap-2"
             >
               <Home className="h-4 w-4" />
-              Home
+              {t('header.home')}
             </Button>
           </Link>
 
@@ -95,7 +97,7 @@ export function Header() {
               className="gap-2"
             >
               <Search className="h-4 w-4" />
-              Advanced Search
+              {t('header.search')}
             </Button>
           </Link>
 
@@ -106,7 +108,7 @@ export function Header() {
               className="gap-2"
             >
               <BarChart2 className="h-4 w-4" />
-              Compare
+              {t('header.compare')}
             </Button>
           </Link>
 
@@ -117,7 +119,7 @@ export function Header() {
               className="gap-2"
             >
               <Upload className="h-4 w-4" />
-              Upload Document
+              {t('header.upload')}
             </Button>
           </Link>
 
@@ -128,7 +130,7 @@ export function Header() {
               className="gap-2"
             >
               <Lightbulb className="h-4 w-4" />
-              Suggest Keyword
+              {t('header.suggest')}
             </Button>
           </Link>
 
@@ -136,13 +138,13 @@ export function Header() {
 
           <Link to="/about">
             <Button variant="ghost" size="sm">
-              About
+              {t('header.about')}
             </Button>
           </Link>
 
           <Link to="/methodology">
             <Button variant="ghost" size="sm">
-              Methodology
+              {t('header.methodology')}
             </Button>
           </Link>
         </nav>
@@ -156,7 +158,7 @@ export function Header() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder="Quick search keywords..."
+                  placeholder={t('home.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -171,7 +173,7 @@ export function Header() {
                   className="w-full justify-start gap-2"
                 >
                   <Home className="h-4 w-4" />
-                  Home
+                  {t('header.home')}
                 </Button>
               </Link>
 
@@ -181,7 +183,7 @@ export function Header() {
                   className="w-full justify-start gap-2"
                 >
                   <Search className="h-4 w-4" />
-                  Advanced Search
+                  {t('header.search')}
                 </Button>
               </Link>
 
@@ -191,7 +193,7 @@ export function Header() {
                   className="w-full justify-start gap-2"
                 >
                   <BarChart2 className="h-4 w-4" />
-                  Compare Keywords
+                  {t('header.compare')}
                 </Button>
               </Link>
 
@@ -201,7 +203,7 @@ export function Header() {
                   className="w-full justify-start gap-2"
                 >
                   <Upload className="h-4 w-4" />
-                  Upload Document
+                  {t('header.upload')}
                 </Button>
               </Link>
 
@@ -211,7 +213,7 @@ export function Header() {
                   className="w-full justify-start gap-2"
                 >
                   <Lightbulb className="h-4 w-4" />
-                  Suggest Keyword
+                  {t('header.suggest')}
                 </Button>
               </Link>
 
@@ -219,13 +221,13 @@ export function Header() {
 
               <Link to="/about" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start">
-                  About
+                  {t('header.about')}
                 </Button>
               </Link>
 
               <Link to="/methodology" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start">
-                  Methodology
+                  {t('header.methodology')}
                 </Button>
               </Link>
             </div>

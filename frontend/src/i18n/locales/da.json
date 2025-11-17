@@ -1,0 +1,227 @@
+{
+  "common": {
+    "loading": "Indlæser...",
+    "error": "Fejl",
+    "search": "Søg",
+    "clear": "Ryd",
+    "submit": "Indsend",
+    "cancel": "Annuller",
+    "save": "Gem",
+    "delete": "Slet",
+    "edit": "Rediger",
+    "close": "Luk",
+    "previous": "Forrige",
+    "next": "Næste",
+    "page": "Side",
+    "of": "af",
+    "showing": "Viser",
+    "results": "resultater",
+    "noResults": "Ingen resultater fundet",
+    "tryAgain": "Prøv igen",
+    "learnMore": "Lær mere"
+  },
+  "header": {
+    "title": "EU Efterretningscenter",
+    "subtitle": "Europæisk Nyhedssentimentanalyse",
+    "home": "Hjem",
+    "search": "Søg",
+    "compare": "Sammenlign",
+    "upload": "Upload",
+    "suggest": "Foreslå",
+    "about": "Om",
+    "methodology": "Metode",
+    "admin": "Administrator"
+  },
+  "footer": {
+    "copyright": "© 2024 EU Efterretningscenter. Alle rettigheder forbeholdes.",
+    "description": "AI-drevet sentimentanalyse for europæiske nyheder",
+    "links": "Hurtige links",
+    "contact": "Kontakt",
+    "privacy": "Privatlivspolitik",
+    "terms": "Servicevilkår"
+  },
+  "home": {
+    "hero": {
+      "badge": "AI-drevet efterretningsplatform",
+      "title": "Forstå europæiske nyheder",
+      "subtitle": "Gennem AI-sentimentanalyse",
+      "description": "Spor sentimenttrends på tværs af 12 større europæiske nyhedskilder. Analyser geopolitiske emner med to-lags AI-analyse drevet af VADER og Google Gemini.",
+      "startExploring": "Begynd at udforske",
+      "learnHow": "Lær hvordan det virker"
+    },
+    "features": {
+      "realTime": {
+        "title": "Realtidssporing",
+        "description": "Overvåg sentimentændringer på tværs af emner i realtid"
+      },
+      "aiAnalysis": {
+        "title": "AI-analyse",
+        "description": "To-lags sentimentanalyse med tillidsscoring"
+      },
+      "multiLanguage": {
+        "title": "Flersproget",
+        "description": "Understøtter 9 europæiske sprog"
+      }
+    },
+    "trending": "Trending emner",
+    "trendingDescription": "Mest analyserede nøgleord med nylig aktivitet",
+    "searchPlaceholder": "Søg nøgleord... (f.eks. Klimaforandringer, EU-politik, Ukraine)",
+    "allCategories": "Alle kategorier",
+    "sortBy": "Sorter efter:",
+    "popularity": "Popularitet",
+    "recent": "Seneste",
+    "noKeywords": "Ingen nøgleord fundet",
+    "noKeywordsDescription": "Prøv at justere din søgning eller gennemse alle tilgængelige emner",
+    "clearSearch": "Ryd søgning",
+    "showingKeywords": "nøgleord"
+  },
+  "keyword": {
+    "details": "Nøgleordsdetaljer",
+    "articles": "Artikler",
+    "sentiment": "Sentiment",
+    "timeline": "Tidslinje",
+    "relations": "Relationer",
+    "category": "Kategori",
+    "popularity": "Popularitet",
+    "articleCount": "Artikelantal",
+    "averageSentiment": "Gennemsnitligt sentiment",
+    "noArticles": "Ingen artikler fundet for dette nøgleord",
+    "loadingArticles": "Indlæser artikler...",
+    "viewArticle": "Vis artikel"
+  },
+  "sentiment": {
+    "overall": "Overordnet sentiment",
+    "positive": "Positiv",
+    "negative": "Negativ",
+    "neutral": "Neutral",
+    "stronglyPositive": "Stærkt positiv",
+    "stronglyNegative": "Stærkt negativ",
+    "confidence": "Tillid",
+    "classification": "Klassificering",
+    "distribution": "Sentimentfordeling",
+    "trend": "Trend",
+    "improving": "Forbedrende",
+    "declining": "Faldende",
+    "stable": "Stabil",
+    "insufficientData": "Utilstrækkelige data",
+    "bySource": "Efter kilde",
+    "mostPositive": "Mest positiv",
+    "mostNegative": "Mest negativ"
+  },
+  "search": {
+    "title": "Søg artikler",
+    "semanticSearch": "Semantisk søgning",
+    "fullTextSearch": "Fuldtekstsøgning",
+    "searchPlaceholder": "Søg efter artikler, emner eller nøgleord...",
+    "filters": "Filtre",
+    "source": "Kilde",
+    "dateRange": "Datointerval",
+    "sentimentFilter": "Sentiment",
+    "searchResults": "Søgeresultater",
+    "noResults": "Ingen artikler fundet",
+    "tryDifferent": "Prøv forskellige nøgleord eller juster dine filtre"
+  },
+  "upload": {
+    "title": "Upload dokument",
+    "description": "Upload en nyhedsartikel til AI-analyse",
+    "dragDrop": "Træk og slip en fil her, eller klik for at browse",
+    "supportedFormats": "Understøttede formater: TXT, PDF, DOCX",
+    "maxSize": "Maksimal filstørrelse: 10MB",
+    "uploading": "Uploader...",
+    "analyzing": "Analyserer...",
+    "success": "Dokument uploadet og analyseret succesfuldt!",
+    "error": "Fejl ved upload af dokument",
+    "viewResults": "Vis resultater"
+  },
+  "suggest": {
+    "title": "Foreslå et nøgleord",
+    "description": "Foreslå et nyt nøgleord til sporing",
+    "keywordLabel": "Nøgleord (Engelsk)",
+    "keywordPlaceholder": "Indtast nøgleord på engelsk",
+    "thaiTranslation": "Thailandsk oversættelse (Valgfri)",
+    "germanTranslation": "Tysk oversættelse (Valgfri)",
+    "danishTranslation": "Dansk oversættelse (Valgfri)",
+    "categoryLabel": "Kategori",
+    "reasonLabel": "Begrundelse for forslag",
+    "reasonPlaceholder": "Hvorfor skal dette nøgleord spores?",
+    "emailLabel": "Kontakt-e-mail (Valgfri)",
+    "emailPlaceholder": "din@email.dk",
+    "submitSuggestion": "Indsend forslag",
+    "success": "Forslag indsendt succesfuldt!",
+    "error": "Fejl ved indsendelse af forslag",
+    "selectCategory": "Vælg en kategori"
+  },
+  "admin": {
+    "suggestions": {
+      "title": "Nøgleordsforslag",
+      "pending": "Afventende",
+      "approved": "Godkendt",
+      "rejected": "Afvist",
+      "approve": "Godkend",
+      "reject": "Afvis",
+      "votes": "Stemmer",
+      "reason": "Begrundelse",
+      "noSuggestions": "Ingen forslag fundet"
+    },
+    "sources": {
+      "title": "Nyhedskilder",
+      "addSource": "Tilføj kilde",
+      "name": "Navn",
+      "url": "URL",
+      "language": "Sprog",
+      "country": "Land",
+      "priority": "Prioritet",
+      "enabled": "Aktiveret",
+      "disabled": "Deaktiveret",
+      "lastScraped": "Sidst hentet",
+      "toggle": "Skift",
+      "noSources": "Ingen kilder fundet"
+    },
+    "search": {
+      "title": "Søgningsstyring",
+      "queuedSearches": "Køsøgninger",
+      "searchHistory": "Søgehistorik",
+      "noSearches": "Ingen søgninger fundet"
+    }
+  },
+  "about": {
+    "title": "Om EU Efterretningscenter",
+    "mission": "Vores mission",
+    "missionText": "At levere gennemsigtig, AI-drevet sentimentanalyse af europæiske nyhedskilder, der hjælper brugere med at forstå geopolitiske trends og medienarrativ.",
+    "howItWorks": "Sådan virker det",
+    "team": "Vores team",
+    "contact": "Kontakt os"
+  },
+  "methodology": {
+    "title": "Vores metode",
+    "overview": "Oversigt",
+    "overviewText": "Vi bruger en to-lags AI-tilgang, der kombinerer VADER-sentimentanalyse med Google Gemini for forbedret nøjagtighed.",
+    "dataCollection": "Dataindsamling",
+    "sentimentAnalysis": "Sentimentanalyse",
+    "vectorSearch": "Semantisk søgning",
+    "sources": "Nyhedskilder"
+  },
+  "compare": {
+    "title": "Sammenlign nøgleord",
+    "selectKeywords": "Vælg nøgleord at sammenligne",
+    "addKeyword": "Tilføj nøgleord",
+    "comparison": "Sammenligning",
+    "noKeywordsSelected": "Ingen nøgleord valgt",
+    "selectAtLeastTwo": "Vælg mindst to nøgleord at sammenligne"
+  },
+  "categories": {
+    "all": "Alle kategorier",
+    "geopolitics": "Geopolitik",
+    "economy": "Økonomi",
+    "environment": "Miljø",
+    "technology": "Teknologi",
+    "society": "Samfund",
+    "general": "Generelt"
+  },
+  "languages": {
+    "en": "Engelsk",
+    "th": "Thailandsk",
+    "de": "Tysk",
+    "da": "Dansk"
+  }
+}

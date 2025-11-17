@@ -1,11 +1,13 @@
 /**
- * Global footer component
+ * Global footer component with i18n support
  */
 import { Link } from 'react-router-dom';
 import { Github, Mail, TrendingUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const { t } = useTranslation();
 
   return (
     <footer className="bg-gray-900 text-gray-300 mt-auto">
@@ -17,40 +19,38 @@ export function Footer() {
               <div className="bg-blue-600 p-2 rounded-lg">
                 <TrendingUp className="h-5 w-5 text-white" />
               </div>
-              <h3 className="text-white font-bold text-lg">EU Intelligence Hub</h3>
+              <h3 className="text-white font-bold text-lg">{t('header.title')}</h3>
             </div>
             <p className="text-sm text-gray-400 mb-4">
-              An AI-powered geopolitical news aggregation and sentiment analysis platform
-              tracking sentiment across 12 European news sources with dual-layer analysis
-              using VADER and Google Gemini AI.
+              {t('footer.description')}
             </p>
             <p className="text-xs text-gray-500">
-              Supporting 9 languages: EN, TH, DE, FR, ES, IT, PL, SV, NL
+              {t('home.features.multiLanguage.description')}
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Quick Links</h4>
+            <h4 className="text-white font-semibold mb-4">{t('footer.links')}</h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/" className="hover:text-white transition-colors">
-                  Home
+                  {t('header.home')}
                 </Link>
               </li>
               <li>
                 <Link to="/search" className="hover:text-white transition-colors">
-                  Advanced Search
+                  {t('header.search')}
                 </Link>
               </li>
               <li>
                 <Link to="/upload" className="hover:text-white transition-colors">
-                  Upload Document
+                  {t('header.upload')}
                 </Link>
               </li>
               <li>
                 <Link to="/suggest" className="hover:text-white transition-colors">
-                  Suggest Keyword
+                  {t('header.suggest')}
                 </Link>
               </li>
             </ul>
@@ -62,12 +62,12 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/about" className="hover:text-white transition-colors">
-                  About Us
+                  {t('header.about')}
                 </Link>
               </li>
               <li>
                 <Link to="/methodology" className="hover:text-white transition-colors">
-                  Methodology
+                  {t('header.methodology')}
                 </Link>
               </li>
               <li>
@@ -77,7 +77,7 @@ export function Footer() {
               </li>
               <li>
                 <Link to="/contact" className="hover:text-white transition-colors">
-                  Contact
+                  {t('footer.contact')}
                 </Link>
               </li>
             </ul>
@@ -87,7 +87,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-gray-500">
-            © {currentYear} EU Intelligence Hub. All rights reserved.
+            {t('footer.copyright')}
           </p>
 
           <div className="flex items-center gap-4">
@@ -111,10 +111,10 @@ export function Footer() {
 
           <div className="flex gap-4 text-xs text-gray-500">
             <Link to="/privacy" className="hover:text-white transition-colors">
-              Privacy Policy
+              {t('footer.privacy')}
             </Link>
             <Link to="/terms" className="hover:text-white transition-colors">
-              Terms of Service
+              {t('footer.terms')}
             </Link>
           </div>
         </div>

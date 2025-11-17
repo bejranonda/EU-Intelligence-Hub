@@ -1,0 +1,227 @@
+{
+  "common": {
+    "loading": "กำลังโหลด...",
+    "error": "ข้อผิดพลาด",
+    "search": "ค้นหา",
+    "clear": "ล้าง",
+    "submit": "ส่ง",
+    "cancel": "ยกเลิก",
+    "save": "บันทึก",
+    "delete": "ลบ",
+    "edit": "แก้ไข",
+    "close": "ปิด",
+    "previous": "ก่อนหน้า",
+    "next": "ถัดไป",
+    "page": "หน้า",
+    "of": "จาก",
+    "showing": "แสดง",
+    "results": "ผลลัพธ์",
+    "noResults": "ไม่พบผลลัพธ์",
+    "tryAgain": "ลองอีกครั้ง",
+    "learnMore": "เรียนรู้เพิ่มเติม"
+  },
+  "header": {
+    "title": "ศูนย์ข่าวกรองสหภาพยุโรป",
+    "subtitle": "การวิเคราะห์ความรู้สึกข่าวสหภาพยุโรป",
+    "home": "หน้าหลัก",
+    "search": "ค้นหา",
+    "compare": "เปรียบเทียบ",
+    "upload": "อัปโหลด",
+    "suggest": "แนะนำ",
+    "about": "เกี่ยวกับ",
+    "methodology": "วิธีการ",
+    "admin": "ผู้ดูแลระบบ"
+  },
+  "footer": {
+    "copyright": "© 2024 ศูนย์ข่าวกรองสหภาพยุโรป สงวนลิขสิทธิ์",
+    "description": "การวิเคราะห์ความรู้สึกข่าวสหภาพยุโรปด้วย AI",
+    "links": "ลิงก์ด่วน",
+    "contact": "ติดต่อ",
+    "privacy": "นโยบายความเป็นส่วนตัว",
+    "terms": "เงื่อนไขการใช้บริการ"
+  },
+  "home": {
+    "hero": {
+      "badge": "แพลตฟอร์มข่าวกรองที่ขับเคลื่อนด้วย AI",
+      "title": "เข้าใจข่าวสหภาพยุโรป",
+      "subtitle": "ผ่านการวิเคราะห์ความรู้สึกด้วย AI",
+      "description": "ติดตามแนวโน้มความรู้สึกจากแหล่งข่าวสหภาพยุโรป 12 แหล่งหลัก วิเคราะห์หัวข้อภูมิรัฐศาสตร์ด้วยการวิเคราะห์ AI สองชั้นที่ขับเคลื่อนโดย VADER และ Google Gemini",
+      "startExploring": "เริ่มสำรวจ",
+      "learnHow": "เรียนรู้วิธีการทำงาน"
+    },
+    "features": {
+      "realTime": {
+        "title": "การติดตามแบบเรียลไทม์",
+        "description": "ติดตามการเปลี่ยนแปลงความรู้สึกในหัวข้อต่างๆ แบบเรียลไทม์"
+      },
+      "aiAnalysis": {
+        "title": "การวิเคราะห์ AI",
+        "description": "การวิเคราะห์ความรู้สึกสองชั้นพร้อมคะแนนความมั่นใจ"
+      },
+      "multiLanguage": {
+        "title": "หลายภาษา",
+        "description": "รองรับภาษายุโรป 9 ภาษา"
+      }
+    },
+    "trending": "หัวข้อที่กำลังมาแรง",
+    "trendingDescription": "คำหลักที่ถูกวิเคราะห์มากที่สุดพร้อมกิจกรรมล่าสุด",
+    "searchPlaceholder": "ค้นหาคำหลัก... (เช่น การเปลี่ยนแปลงสภาพภูมิอากาศ, นโยบาย EU, ยูเครน)",
+    "allCategories": "ทุกหมวดหมู่",
+    "sortBy": "เรียงตาม:",
+    "popularity": "ความนิยม",
+    "recent": "ล่าสุด",
+    "noKeywords": "ไม่พบคำหลัก",
+    "noKeywordsDescription": "ลองปรับการค้นหาของคุณหรือเรียกดูหัวข้อที่มีทั้งหมด",
+    "clearSearch": "ล้างการค้นหา",
+    "showingKeywords": "คำหลัก"
+  },
+  "keyword": {
+    "details": "รายละเอียดคำหลัก",
+    "articles": "บทความ",
+    "sentiment": "ความรู้สึก",
+    "timeline": "ไทม์ไลน์",
+    "relations": "ความสัมพันธ์",
+    "category": "หมวดหมู่",
+    "popularity": "ความนิยม",
+    "articleCount": "จำนวนบทความ",
+    "averageSentiment": "ความรู้สึกเฉลี่ย",
+    "noArticles": "ไม่พบบทความสำหรับคำหลักนี้",
+    "loadingArticles": "กำลังโหลดบทความ...",
+    "viewArticle": "ดูบทความ"
+  },
+  "sentiment": {
+    "overall": "ความรู้สึกโดยรวม",
+    "positive": "บวก",
+    "negative": "ลบ",
+    "neutral": "เป็นกลาง",
+    "stronglyPositive": "บวกมาก",
+    "stronglyNegative": "ลบมาก",
+    "confidence": "ความมั่นใจ",
+    "classification": "การจำแนกประเภท",
+    "distribution": "การกระจายความรู้สึก",
+    "trend": "แนวโน้ม",
+    "improving": "ดีขึ้น",
+    "declining": "แย่ลง",
+    "stable": "คงที่",
+    "insufficientData": "ข้อมูลไม่เพียงพอ",
+    "bySource": "ตามแหล่งที่มา",
+    "mostPositive": "บวกที่สุด",
+    "mostNegative": "ลบที่สุด"
+  },
+  "search": {
+    "title": "ค้นหาบทความ",
+    "semanticSearch": "การค้นหาความหมาย",
+    "fullTextSearch": "การค้นหาแบบเต็มข้อความ",
+    "searchPlaceholder": "ค้นหาบทความ หัวข้อ หรือคำหลัก...",
+    "filters": "ตัวกรอง",
+    "source": "แหล่งที่มา",
+    "dateRange": "ช่วงวันที่",
+    "sentimentFilter": "ความรู้สึก",
+    "searchResults": "ผลการค้นหา",
+    "noResults": "ไม่พบบทความ",
+    "tryDifferent": "ลองใช้คำหลักอื่นหรือปรับตัวกรองของคุณ"
+  },
+  "upload": {
+    "title": "อัปโหลดเอกสาร",
+    "description": "อัปโหลดบทความข่าวเพื่อการวิเคราะห์ด้วย AI",
+    "dragDrop": "ลากและวางไฟล์ที่นี่ หรือคลิกเพื่อเรียกดู",
+    "supportedFormats": "รูปแบบที่รองรับ: TXT, PDF, DOCX",
+    "maxSize": "ขนาดไฟล์สูงสุด: 10MB",
+    "uploading": "กำลังอัปโหลด...",
+    "analyzing": "กำลังวิเคราะห์...",
+    "success": "อัปโหลดและวิเคราะห์เอกสารสำเร็จ!",
+    "error": "เกิดข้อผิดพลาดในการอัปโหลดเอกสาร",
+    "viewResults": "ดูผลลัพธ์"
+  },
+  "suggest": {
+    "title": "แนะนำคำหลัก",
+    "description": "แนะนำคำหลักใหม่สำหรับการติดตาม",
+    "keywordLabel": "คำหลัก (ภาษาอังกฤษ)",
+    "keywordPlaceholder": "ป้อนคำหลักเป็นภาษาอังกฤษ",
+    "thaiTranslation": "การแปลภาษาไทย (ไม่บังคับ)",
+    "germanTranslation": "การแปลภาษาเยอรมัน (ไม่บังคับ)",
+    "danishTranslation": "การแปลภาษาเดนมาร์ก (ไม่บังคับ)",
+    "categoryLabel": "หมวดหมู่",
+    "reasonLabel": "เหตุผลในการแนะนำ",
+    "reasonPlaceholder": "ทำไมควรติดตามคำหลักนี้?",
+    "emailLabel": "อีเมลติดต่อ (ไม่บังคับ)",
+    "emailPlaceholder": "your@email.com",
+    "submitSuggestion": "ส่งข้อเสนอแนะ",
+    "success": "ส่งข้อเสนอแนะสำเร็จ!",
+    "error": "เกิดข้อผิดพลาดในการส่งข้อเสนอแนะ",
+    "selectCategory": "เลือกหมวดหมู่"
+  },
+  "admin": {
+    "suggestions": {
+      "title": "ข้อเสนอแนะคำหลัก",
+      "pending": "รอดำเนินการ",
+      "approved": "อนุมัติแล้ว",
+      "rejected": "ปฏิเสธแล้ว",
+      "approve": "อนุมัติ",
+      "reject": "ปฏิเสธ",
+      "votes": "โหวต",
+      "reason": "เหตุผล",
+      "noSuggestions": "ไม่พบข้อเสนอแนะ"
+    },
+    "sources": {
+      "title": "แหล่งข่าว",
+      "addSource": "เพิ่มแหล่งข่าว",
+      "name": "ชื่อ",
+      "url": "URL",
+      "language": "ภาษา",
+      "country": "ประเทศ",
+      "priority": "ลำดับความสำคัญ",
+      "enabled": "เปิดใช้งาน",
+      "disabled": "ปิดใช้งาน",
+      "lastScraped": "ดึงข้อมูลล่าสุด",
+      "toggle": "สลับ",
+      "noSources": "ไม่พบแหล่งข่าว"
+    },
+    "search": {
+      "title": "การจัดการการค้นหา",
+      "queuedSearches": "การค้นหาในคิว",
+      "searchHistory": "ประวัติการค้นหา",
+      "noSearches": "ไม่พบการค้นหา"
+    }
+  },
+  "about": {
+    "title": "เกี่ยวกับศูนย์ข่าวกรองสหภาพยุโรป",
+    "mission": "พันธกิจของเรา",
+    "missionText": "ให้บริการการวิเคราะห์ความรู้สึกข่าวสหภาพยุโรปด้วย AI ที่โปร่งใส ช่วยให้ผู้ใช้เข้าใจแนวโน้มภูมิรัฐศาสตร์และการเล่าเรื่องของสื่อ",
+    "howItWorks": "วิธีการทำงาน",
+    "team": "ทีมของเรา",
+    "contact": "ติดต่อเรา"
+  },
+  "methodology": {
+    "title": "วิธีการของเรา",
+    "overview": "ภาพรวม",
+    "overviewText": "เราใช้แนวทาง AI สองชั้นที่รวมการวิเคราะห์ความรู้สึก VADER กับ Google Gemini เพื่อความแม่นยำที่เพิ่มขึ้น",
+    "dataCollection": "การเก็บรวบรวมข้อมูล",
+    "sentimentAnalysis": "การวิเคราะห์ความรู้สึก",
+    "vectorSearch": "การค้นหาความหมาย",
+    "sources": "แหล่งข่าว"
+  },
+  "compare": {
+    "title": "เปรียบเทียบคำหลัก",
+    "selectKeywords": "เลือกคำหลักเพื่อเปรียบเทียบ",
+    "addKeyword": "เพิ่มคำหลัก",
+    "comparison": "การเปรียบเทียบ",
+    "noKeywordsSelected": "ไม่ได้เลือกคำหลัก",
+    "selectAtLeastTwo": "เลือกอย่างน้อยสองคำหลักเพื่อเปรียบเทียบ"
+  },
+  "categories": {
+    "all": "ทุกหมวดหมู่",
+    "geopolitics": "ภูมิรัฐศาสตร์",
+    "economy": "เศรษฐกิจ",
+    "environment": "สิ่งแวดล้อม",
+    "technology": "เทคโนโลยี",
+    "society": "สังคม",
+    "general": "ทั่วไป"
+  },
+  "languages": {
+    "en": "อังกฤษ",
+    "th": "ไทย",
+    "de": "เยอรมัน",
+    "da": "เดนมาร์ก"
+  }
+}

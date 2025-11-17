@@ -1,0 +1,227 @@
+{
+  "common": {
+    "loading": "Wird geladen...",
+    "error": "Fehler",
+    "search": "Suchen",
+    "clear": "Löschen",
+    "submit": "Absenden",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "page": "Seite",
+    "of": "von",
+    "showing": "Zeige",
+    "results": "Ergebnisse",
+    "noResults": "Keine Ergebnisse gefunden",
+    "tryAgain": "Erneut versuchen",
+    "learnMore": "Mehr erfahren"
+  },
+  "header": {
+    "title": "EU-Nachrichtenzentrum",
+    "subtitle": "Europäische Nachrichten-Sentimentanalyse",
+    "home": "Startseite",
+    "search": "Suchen",
+    "compare": "Vergleichen",
+    "upload": "Hochladen",
+    "suggest": "Vorschlagen",
+    "about": "Über uns",
+    "methodology": "Methodik",
+    "admin": "Verwaltung"
+  },
+  "footer": {
+    "copyright": "© 2024 EU-Nachrichtenzentrum. Alle Rechte vorbehalten.",
+    "description": "KI-gestützte Sentimentanalyse für europäische Nachrichtenquellen",
+    "links": "Schnelllinks",
+    "contact": "Kontakt",
+    "privacy": "Datenschutz",
+    "terms": "Nutzungsbedingungen"
+  },
+  "home": {
+    "hero": {
+      "badge": "KI-gestützte Intelligence-Plattform",
+      "title": "Europäische Nachrichten verstehen",
+      "subtitle": "Durch KI-Sentimentanalyse",
+      "description": "Verfolgen Sie Sentiment-Trends über 12 wichtige europäische Nachrichtenquellen. Analysieren Sie geopolitische Themen mit zweischichtiger KI-Analyse powered by VADER und Google Gemini.",
+      "startExploring": "Entdeckung starten",
+      "learnHow": "So funktioniert es"
+    },
+    "features": {
+      "realTime": {
+        "title": "Echtzeit-Tracking",
+        "description": "Überwachen Sie Sentimentänderungen zu Themen in Echtzeit"
+      },
+      "aiAnalysis": {
+        "title": "KI-Analyse",
+        "description": "Zweischichtige Sentimentanalyse mit Konfidenzbewertung"
+      },
+      "multiLanguage": {
+        "title": "Mehrsprachig",
+        "description": "Unterstützung für 9 europäische Sprachen"
+      }
+    },
+    "trending": "Trendthemen",
+    "trendingDescription": "Meist analysierte Schlüsselwörter mit aktuellen Aktivitäten",
+    "searchPlaceholder": "Schlüsselwörter suchen... (z.B. Klimawandel, EU-Politik, Ukraine)",
+    "allCategories": "Alle Kategorien",
+    "sortBy": "Sortieren nach:",
+    "popularity": "Beliebtheit",
+    "recent": "Aktuell",
+    "noKeywords": "Keine Schlüsselwörter gefunden",
+    "noKeywordsDescription": "Passen Sie Ihre Suche an oder durchsuchen Sie alle verfügbaren Themen",
+    "clearSearch": "Suche löschen",
+    "showingKeywords": "Schlüsselwörter"
+  },
+  "keyword": {
+    "details": "Schlüsselwort-Details",
+    "articles": "Artikel",
+    "sentiment": "Sentiment",
+    "timeline": "Zeitlinie",
+    "relations": "Beziehungen",
+    "category": "Kategorie",
+    "popularity": "Beliebtheit",
+    "articleCount": "Artikelanzahl",
+    "averageSentiment": "Durchschnittliches Sentiment",
+    "noArticles": "Keine Artikel für dieses Schlüsselwort gefunden",
+    "loadingArticles": "Artikel werden geladen...",
+    "viewArticle": "Artikel anzeigen"
+  },
+  "sentiment": {
+    "overall": "Gesamt-Sentiment",
+    "positive": "Positiv",
+    "negative": "Negativ",
+    "neutral": "Neutral",
+    "stronglyPositive": "Stark Positiv",
+    "stronglyNegative": "Stark Negativ",
+    "confidence": "Konfidenz",
+    "classification": "Klassifizierung",
+    "distribution": "Sentiment-Verteilung",
+    "trend": "Trend",
+    "improving": "Verbessernd",
+    "declining": "Abnehmend",
+    "stable": "Stabil",
+    "insufficientData": "Unzureichende Daten",
+    "bySource": "Nach Quelle",
+    "mostPositive": "Am Positivsten",
+    "mostNegative": "Am Negativsten"
+  },
+  "search": {
+    "title": "Artikel suchen",
+    "semanticSearch": "Semantische Suche",
+    "fullTextSearch": "Volltextsuche",
+    "searchPlaceholder": "Suchen Sie nach Artikeln, Themen oder Schlüsselwörtern...",
+    "filters": "Filter",
+    "source": "Quelle",
+    "dateRange": "Datumsbereich",
+    "sentimentFilter": "Sentiment",
+    "searchResults": "Suchergebnisse",
+    "noResults": "Keine Artikel gefunden",
+    "tryDifferent": "Versuchen Sie andere Schlüsselwörter oder passen Sie Ihre Filter an"
+  },
+  "upload": {
+    "title": "Dokument hochladen",
+    "description": "Laden Sie einen Nachrichtenartikel für KI-Analyse hoch",
+    "dragDrop": "Ziehen Sie eine Datei hierher oder klicken Sie zum Durchsuchen",
+    "supportedFormats": "Unterstützte Formate: TXT, PDF, DOCX",
+    "maxSize": "Maximale Dateigröße: 10MB",
+    "uploading": "Wird hochgeladen...",
+    "analyzing": "Wird analysiert...",
+    "success": "Dokument erfolgreich hochgeladen und analysiert!",
+    "error": "Fehler beim Hochladen des Dokuments",
+    "viewResults": "Ergebnisse anzeigen"
+  },
+  "suggest": {
+    "title": "Schlüsselwort vorschlagen",
+    "description": "Schlagen Sie ein neues Schlüsselwort zum Tracking vor",
+    "keywordLabel": "Schlüsselwort (Englisch)",
+    "keywordPlaceholder": "Schlüsselwort auf Englisch eingeben",
+    "thaiTranslation": "Thai-Übersetzung (Optional)",
+    "germanTranslation": "Deutsche Übersetzung (Optional)",
+    "danishTranslation": "Dänische Übersetzung (Optional)",
+    "categoryLabel": "Kategorie",
+    "reasonLabel": "Grund für Vorschlag",
+    "reasonPlaceholder": "Warum sollte dieses Schlüsselwort verfolgt werden?",
+    "emailLabel": "Kontakt-E-Mail (Optional)",
+    "emailPlaceholder": "ihre@email.de",
+    "submitSuggestion": "Vorschlag absenden",
+    "success": "Vorschlag erfolgreich eingereicht!",
+    "error": "Fehler beim Einreichen des Vorschlags",
+    "selectCategory": "Kategorie auswählen"
+  },
+  "admin": {
+    "suggestions": {
+      "title": "Schlüsselwort-Vorschläge",
+      "pending": "Ausstehend",
+      "approved": "Genehmigt",
+      "rejected": "Abgelehnt",
+      "approve": "Genehmigen",
+      "reject": "Ablehnen",
+      "votes": "Stimmen",
+      "reason": "Grund",
+      "noSuggestions": "Keine Vorschläge gefunden"
+    },
+    "sources": {
+      "title": "Nachrichtenquellen",
+      "addSource": "Quelle hinzufügen",
+      "name": "Name",
+      "url": "URL",
+      "language": "Sprache",
+      "country": "Land",
+      "priority": "Priorität",
+      "enabled": "Aktiviert",
+      "disabled": "Deaktiviert",
+      "lastScraped": "Zuletzt abgerufen",
+      "toggle": "Umschalten",
+      "noSources": "Keine Quellen gefunden"
+    },
+    "search": {
+      "title": "Suchverwaltung",
+      "queuedSearches": "Warteschlangen-Suchen",
+      "searchHistory": "Suchverlauf",
+      "noSearches": "Keine Suchen gefunden"
+    }
+  },
+  "about": {
+    "title": "Über EU-Nachrichtenzentrum",
+    "mission": "Unsere Mission",
+    "missionText": "Transparente, KI-gestützte Sentimentanalyse europäischer Nachrichtenquellen bereitzustellen, um Nutzern zu helfen, geopolitische Trends und Mediennarrative zu verstehen.",
+    "howItWorks": "Wie es funktioniert",
+    "team": "Unser Team",
+    "contact": "Kontaktieren Sie uns"
+  },
+  "methodology": {
+    "title": "Unsere Methodik",
+    "overview": "Überblick",
+    "overviewText": "Wir verwenden einen zweischichtigen KI-Ansatz, der VADER-Sentimentanalyse mit Google Gemini für verbesserte Genauigkeit kombiniert.",
+    "dataCollection": "Datenerfassung",
+    "sentimentAnalysis": "Sentimentanalyse",
+    "vectorSearch": "Semantische Suche",
+    "sources": "Nachrichtenquellen"
+  },
+  "compare": {
+    "title": "Schlüsselwörter vergleichen",
+    "selectKeywords": "Schlüsselwörter zum Vergleichen auswählen",
+    "addKeyword": "Schlüsselwort hinzufügen",
+    "comparison": "Vergleich",
+    "noKeywordsSelected": "Keine Schlüsselwörter ausgewählt",
+    "selectAtLeastTwo": "Wählen Sie mindestens zwei Schlüsselwörter zum Vergleichen aus"
+  },
+  "categories": {
+    "all": "Alle Kategorien",
+    "geopolitics": "Geopolitik",
+    "economy": "Wirtschaft",
+    "environment": "Umwelt",
+    "technology": "Technologie",
+    "society": "Gesellschaft",
+    "general": "Allgemein"
+  },
+  "languages": {
+    "en": "Englisch",
+    "th": "Thailändisch",
+    "de": "Deutsch",
+    "da": "Dänisch"
+  }
+}
