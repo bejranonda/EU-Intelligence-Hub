@@ -49,6 +49,7 @@ jobs:
         cd backend
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        python -m spacy download en_core_web_sm
 
     - name: Setup pgvector extension
       run: |
@@ -80,9 +81,12 @@ jobs:
         SECRET_KEY: test_secret_key
         ADMIN_USERNAME: test_admin
         ADMIN_PASSWORD: test_password
+        ENABLE_GEMINI_SENTIMENT: "false"
+        ENABLE_VADER_BASELINE: "true"
+        KEYWORD_SCHEDULER_ENABLED: "false"
       run: |
         cd backend
-        pytest -v --cov=app --cov-report=xml --cov-report=term
+        pytest app/tests tests -v --cov=app --cov-report=xml --cov-report=term
     
     - name: Upload coverage
       uses: codecov/codecov-action@v4
