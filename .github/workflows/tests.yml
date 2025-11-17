@@ -75,10 +75,14 @@ jobs:
         REDIS_URL: redis://localhost:6379/0
         CELERY_BROKER_URL: redis://localhost:6379/0
         CELERY_RESULT_BACKEND: redis://localhost:6379/0
-        ENVIRONMENT: testing
+        ENVIRONMENT: test
+        GEMINI_API_KEY: ""
+        SECRET_KEY: test_secret_key
+        ADMIN_USERNAME: test_admin
+        ADMIN_PASSWORD: test_password
       run: |
         cd backend
-        pytest app/tests -v --cov=app --cov-report=xml --cov-report=term
+        pytest -v --cov=app --cov-report=xml --cov-report=term
     
     - name: Upload coverage
       uses: codecov/codecov-action@v4
