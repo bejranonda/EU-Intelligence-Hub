@@ -115,7 +115,7 @@ def scrape_news():
                 # Process keywords
                 for keyword_text in extraction["keywords"]:
                     # Find or create keyword
-                    keyword = db.query(Keyword).filter_by(name_en=keyword_text).first()
+                    keyword = db.query(Keyword).filter_by(keyword_en=keyword_text).first()
 
                     if not keyword:
                         # Generate embedding for keyword
@@ -124,7 +124,7 @@ def scrape_news():
                         )
 
                         keyword = Keyword(
-                            name_en=keyword_text,
+                            keyword_en=keyword_text,
                             category="auto",
                             popularity_score=1.0,
                             search_count=0,

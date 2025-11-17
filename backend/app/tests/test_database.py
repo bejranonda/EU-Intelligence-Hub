@@ -1,6 +1,7 @@
 """Tests for database connection and models."""
 
 import pytest
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.models.models import (
@@ -17,7 +18,7 @@ from app.models.models import (
 
 def test_database_connection(db_session: Session):
     """Test that database connection works."""
-    result = db_session.execute("SELECT 1")
+    result = db_session.execute(text("SELECT 1"))
     assert result.scalar() == 1
 
 
@@ -69,7 +70,7 @@ def test_create_article(db_session: Session):
 
 def test_keyword_article_relationship(db_session: Session):
     """Test many-to-many relationship between keywords and articles."""
-    keyword = Keyword(name_en="Test Keyword")
+    keyword = Keyword(keyword_en="Test Keyword")
     article = Article(title="Test Article", source_url="https://example.com/test")
     db_session.add(keyword)
     db_session.add(article)
