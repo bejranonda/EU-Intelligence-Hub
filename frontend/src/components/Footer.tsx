@@ -6,7 +6,6 @@ import { Github, Mail, TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export function Footer() {
-  const currentYear = new Date().getFullYear();
   const { t } = useTranslation();
 
   return (

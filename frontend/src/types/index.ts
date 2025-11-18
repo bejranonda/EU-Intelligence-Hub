@@ -10,6 +10,8 @@ export interface Keyword {
   keyword_da?: string;
   category: string;
   article_count?: number;
+  popularity_score?: number;
+  average_sentiment?: number | null;
   created_at?: string;
   updated_at?: string;
 }
