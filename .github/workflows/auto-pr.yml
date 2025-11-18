@@ -93,6 +93,13 @@ jobs:
           const prNumber = ${{ steps.create_pr.outputs.pr_number }};
 
           try {
+            // Get the PR to obtain its node_id
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+
             // Enable auto-merge with squash method
             await github.graphql(`
               mutation EnableAutoMerge($pullRequestId: ID!) {
@@ -108,7 +115,7 @@ jobs:
                 }
               }
             `, {
-              pullRequestId: context.payload.pull_request.node_id
+              pullRequestId: pr.node_id
             });
 
             console.log(`Auto-merge enabled for PR #${prNumber}`);
