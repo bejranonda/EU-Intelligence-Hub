@@ -1,5 +1,6 @@
 /**
  * Type definitions for the application
+ * Updated: 2025-11-18 - Added popularity_score and average_sentiment
  */
 
 export interface Keyword {
