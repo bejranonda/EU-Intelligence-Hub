@@ -1,5 +1,6 @@
 /**
  * Type definitions for the application
+ * Updated: 2025-11-18 - Added popularity_score and average_sentiment
  */
 
 export interface Keyword {
@@ -10,6 +11,8 @@ export interface Keyword {
   keyword_da?: string;
   category: string;
   article_count?: number;
+  popularity_score?: number;
+  average_sentiment?: number | null;
   created_at?: string;
   updated_at?: string;
 }

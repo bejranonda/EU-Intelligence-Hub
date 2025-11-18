@@ -55,7 +55,7 @@ export function KeywordCard({ keyword }: KeywordCardProps) {
             <CardTitle className="text-lg group-hover:text-blue-600 transition-colors line-clamp-2">
               {getKeywordText()}
             </CardTitle>
-            {keyword.average_sentiment !== undefined && (
+            {keyword.average_sentiment != null && (
               <div className={`flex-shrink-0 p-1.5 rounded-full ${sentiment.bg}`}>
                 <SentimentIcon className={`h-4 w-4 ${sentiment.color}`} />
               </div>
@@ -71,7 +71,7 @@ export function KeywordCard({ keyword }: KeywordCardProps) {
               <FileText className="h-4 w-4" />
               <span>{keyword.article_count || 0} {t('keyword.articles')}</span>
             </div>
-            {keyword.average_sentiment !== undefined && (
+            {keyword.average_sentiment != null && (
               <div className={`text-sm font-semibold ${sentiment.color}`}>
                 {keyword.average_sentiment > 0 ? '+' : ''}
                 {keyword.average_sentiment.toFixed(2)}

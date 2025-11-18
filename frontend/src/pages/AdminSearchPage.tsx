@@ -4,8 +4,6 @@ import { apiClient } from '../api/client';
 import { Search, Loader2, Database, FileText, Lightbulb, Globe } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-type SearchResultType = 'keyword' | 'article' | 'suggestion' | 'source';
-
 type KeywordResult = {
   id: number;
   keyword_en: string;

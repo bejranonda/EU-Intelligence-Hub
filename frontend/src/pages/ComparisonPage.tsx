@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
-import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { apiClient } from '../api/client';
@@ -74,7 +73,7 @@ export function ComparisonPage() {
 
     const dateMap = new Map<string, any>();
 
-    comparisonData.keywords.forEach((keyword: any, index: number) => {
+    comparisonData.keywords.forEach((keyword: any) => {
       const timeline = comparisonData.timelines[keyword.id];
       if (timeline && timeline.data_points) {
         timeline.data_points.forEach((point: any) => {

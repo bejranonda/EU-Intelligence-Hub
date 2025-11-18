@@ -11,7 +11,6 @@ import {
 } from './ui/dropdown-menu';
 import { useLanguageStore } from '../store/languageStore';
 import { Language } from '../types';
-import { useTranslation } from 'react-i18next';
 
 const languages: { code: Language; label: string; flag: string }[] = [
   { code: 'en', label: 'English', flag: '🇬🇧' },
@@ -22,7 +21,6 @@ const languages: { code: Language; label: string; flag: string }[] = [
 
 export function LanguageToggle() {
   const { language, setLanguage } = useLanguageStore();
-  const { t } = useTranslation();
 
   const currentLanguage = languages.find((lang) => lang.code === language);
 

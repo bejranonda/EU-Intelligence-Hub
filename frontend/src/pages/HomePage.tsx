@@ -72,7 +72,8 @@ export function HomePage() {
   }) || [];
 
   // Get unique categories
-  const categories = ['all', ...new Set(data?.results.map((k: Keyword) => k.category) || [])];
+  const uniqueCategories: string[] = data?.results ? Array.from(new Set(data.results.map((k: Keyword) => k.category))) : [];
+  const categories: string[] = ['all', ...uniqueCategories];
 
   const showHero = !searchQuery && page === 1;
 
