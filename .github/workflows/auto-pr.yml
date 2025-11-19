@@ -148,19 +148,19 @@ jobs:
 
           const comment = `🤖 **Auto-generated PR**
 
-This pull request was automatically created by the Auto PR workflow.
+          This pull request was automatically created by the Auto PR workflow.
 
-**Configuration:**
-- Base branch: \`main\`
-- Auto-merge: Enabled (squash method)
-- Branch will be deleted automatically after merge
+          **Configuration:**
+          - Base branch: \`main\`
+          - Auto-merge: Enabled (squash method)
+          - Branch will be deleted automatically after merge
 
-**Next Steps:**
-1. ✅ CI checks will run automatically
-2. ✅ PR will auto-merge when all checks pass
-3. ✅ Branch will be auto-deleted
+          **Next Steps:**
+          1. ✅ CI checks will run automatically
+          2. ✅ PR will auto-merge when all checks pass
+          3. ✅ Branch will be auto-deleted
 
-No manual intervention required! 🎉`;
+          No manual intervention required! 🎉`;
 
           await github.rest.issues.createComment({
             owner: context.repo.owner,
